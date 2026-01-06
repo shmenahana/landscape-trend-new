@@ -1,0 +1,407 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Authentication & Users
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          String    @default("user") // admin, manager, crew, office
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  timeEntries   TimeEntry[]
+  estimates     Estimate[]
+  jobs          Job[]
+  activities    Activity[]
+}
+
+// CRM - Customers & Leads
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zip           String?
+  type          String    @default("customer") // lead, customer
+  status        String    @default("active") // active, inactive, prospect
+  source        String?   // referral, website, etc
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contacts      Contact[]
+  estimates     Estimate[]
+  jobs          Job[]
+  invoices      Invoice[]
+  properties    Property[]
+}
+
+model Contact {
+  id            String    @id @default(cuid())
+  customerId    String
+  name          String
+  email         String?
+  phone         String?
+  role          String?   // decision maker, property manager, etc
+  isPrimary     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Property {
+  id            String    @id @default(cuid())
+  customerId    String
+  name          String
+  address       String
+  city          String?
+  state         String?
+  zip           String?
+  squareFeet    Float?
+  acreage       Float?
+  propertyType  String?   // residential, commercial, HOA
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobs          Job[]
+}
+
+// Estimating
+model EstimateTemplate {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  category      String?   // mowing, landscaping, hardscape, etc
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  items         EstimateTemplateItem[]
+}
+
+model EstimateTemplateItem {
+  id            String              @id @default(cuid())
+  templateId    String
+  name          String
+  description   String?
+  quantity      Float               @default(1)
+  unit          String              @default("ea") // ea, sqft, hour, day
+  laborHours    Float               @default(0)
+  materialCost  Float               @default(0)
+  equipmentCost Float               @default(0)
+  sortOrder     Int                 @default(0)
+
+  template      EstimateTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Estimate {
+  id                String        @id @default(cuid())
+  customerId        String
+  userId            String
+  estimateNumber    String        @unique
+  name              String
+  description       String?
+  status            String        @default("draft") // draft, sent, approved, rejected
+  validUntil        DateTime?
+  subtotal          Float         @default(0)
+  overheadPercent   Float         @default(0)
+  overheadAmount    Float         @default(0)
+  profitPercent     Float         @default(0)
+  profitAmount      Float         @default(0)
+  tax               Float         @default(0)
+  totalAmount       Float         @default(0)
+  notes             String?
+  termsAndConditions String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  approvedAt        DateTime?
+  signatureData     String?       // base64 signature
+  signedBy          String?
+
+  customer          Customer      @relation(fields: [customerId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
+  items             EstimateItem[]
+  job               Job?
+}
+
+model EstimateItem {
+  id            String    @id @default(cuid())
+  estimateId    String
+  name          String
+  description   String?
+  quantity      Float
+  unit          String    @default("ea")
+  laborHours    Float     @default(0)
+  laborRate     Float     @default(0)
+  materialCost  Float     @default(0)
+  equipmentCost Float     @default(0)
+  itemTotal     Float     @default(0)
+  sortOrder     Int       @default(0)
+  isOptional    Boolean   @default(false)
+  isSelected    Boolean   @default(true)
+
+  estimate      Estimate  @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+}
+
+// Job Costing & Project Management
+model Job {
+  id                String        @id @default(cuid())
+  customerId        String
+  propertyId        String?
+  estimateId        String?       @unique
+  userId            String
+  jobNumber         String        @unique
+  name              String
+  description       String?
+  status            String        @default("scheduled") // scheduled, in_progress, completed, cancelled
+  priority          String        @default("normal") // low, normal, high, urgent
+  startDate         DateTime?
+  endDate           DateTime?
+  completedDate     DateTime?
+  estimatedHours    Float         @default(0)
+  actualHours       Float         @default(0)
+  estimatedCost     Float         @default(0)
+  actualCost        Float         @default(0)
+  budgetedAmount    Float         @default(0)
+  invoicedAmount    Float         @default(0)
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  customer          Customer      @relation(fields: [customerId], references: [id])
+  property          Property?     @relation(fields: [propertyId], references: [id])
+  estimate          Estimate?     @relation(fields: [estimateId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
+
+  tasks             Task[]
+  timeEntries       TimeEntry[]
+  materials         MaterialUsage[]
+  equipment         EquipmentUsage[]
+  invoices          Invoice[]
+  schedules         Schedule[]
+  photos            Photo[]
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  jobId         String
+  name          String
+  description   String?
+  status        String    @default("pending") // pending, in_progress, completed
+  estimatedHours Float    @default(0)
+  actualHours   Float     @default(0)
+  sortOrder     Int       @default(0)
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  job           Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+// Time Tracking & Crew Management
+model TimeEntry {
+  id            String    @id @default(cuid())
+  jobId         String
+  userId        String
+  clockIn       DateTime
+  clockOut      DateTime?
+  breakMinutes  Int       @default(0)
+  totalHours    Float     @default(0)
+  entryType     String    @default("work") // work, travel, break
+  gpsLatIn      Float?
+  gpsLonIn      Float?
+  gpsLatOut     Float?
+  gpsLonOut     Float?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  job           Job       @relation(fields: [jobId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+}
+
+// Materials & Inventory
+model Material {
+  id            String          @id @default(cuid())
+  name          String
+  description   String?
+  sku           String?         @unique
+  category      String?
+  unit          String          @default("ea") // ea, bag, pallet, yard
+  costPerUnit   Float           @default(0)
+  supplier      String?
+  currentStock  Float           @default(0)
+  minStock      Float           @default(0)
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  usage         MaterialUsage[]
+}
+
+model MaterialUsage {
+  id            String    @id @default(cuid())
+  jobId         String
+  materialId    String
+  quantity      Float
+  costPerUnit   Float
+  totalCost     Float
+  usedAt        DateTime  @default(now())
+  notes         String?
+
+  job           Job       @relation(fields: [jobId], references: [id])
+  material      Material  @relation(fields: [materialId], references: [id])
+}
+
+// Equipment
+model Equipment {
+  id            String          @id @default(cuid())
+  name          String
+  description   String?
+  equipmentType String?         // truck, mower, trailer, etc
+  make          String?
+  model         String?
+  year          Int?
+  purchaseDate  DateTime?
+  purchaseCost  Float?
+  hourlyRate    Float           @default(0)
+  dailyRate     Float           @default(0)
+  status        String          @default("available") // available, in_use, maintenance
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  usage         EquipmentUsage[]
+}
+
+model EquipmentUsage {
+  id            String    @id @default(cuid())
+  jobId         String
+  equipmentId   String
+  hours         Float     @default(0)
+  rate          Float
+  totalCost     Float
+  usedAt        DateTime  @default(now())
+  notes         String?
+
+  job           Job       @relation(fields: [jobId], references: [id])
+  equipment     Equipment @relation(fields: [equipmentId], references: [id])
+}
+
+// Scheduling
+model Schedule {
+  id            String    @id @default(cuid())
+  jobId         String
+  title         String
+  description   String?
+  startTime     DateTime
+  endTime       DateTime
+  allDay        Boolean   @default(false)
+  crewSize      Int       @default(1)
+  status        String    @default("scheduled") // scheduled, completed, cancelled
+  color         String    @default("#3b82f6")
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  job           Job       @relation(fields: [jobId], references: [id])
+}
+
+// Invoicing
+model Invoice {
+  id              String    @id @default(cuid())
+  customerId      String
+  jobId           String?
+  invoiceNumber   String    @unique
+  status          String    @default("draft") // draft, sent, paid, overdue, cancelled
+  issueDate       DateTime  @default(now())
+  dueDate         DateTime?
+  paidDate        DateTime?
+  subtotal        Float     @default(0)
+  tax             Float     @default(0)
+  totalAmount     Float     @default(0)
+  amountPaid      Float     @default(0)
+  notes           String?
+  termsAndConditions String?
+  quickbooksId    String?   // For QuickBooks integration
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  job             Job?      @relation(fields: [jobId], references: [id])
+  items           InvoiceItem[]
+  payments        Payment[]
+}
+
+model InvoiceItem {
+  id            String    @id @default(cuid())
+  invoiceId     String
+  description   String
+  quantity      Float
+  rate          Float
+  amount        Float
+  sortOrder     Int       @default(0)
+
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  invoiceId     String
+  amount        Float
+  paymentDate   DateTime  @default(now())
+  paymentMethod String?   // cash, check, credit_card, ach
+  referenceNumber String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id])
+}
+
+// Photos & Documents
+model Photo {
+  id            String    @id @default(cuid())
+  jobId         String
+  filename      String
+  url           String
+  caption       String?
+  takenAt       DateTime  @default(now())
+  uploadedBy    String?
+
+  job           Job       @relation(fields: [jobId], references: [id])
+}
+
+// Activity Log
+model Activity {
+  id            String    @id @default(cuid())
+  userId        String?
+  entityType    String    // customer, job, estimate, invoice
+  entityId      String
+  action        String    // created, updated, deleted, status_changed
+  description   String
+  metadata      String?   // JSON string for additional data
+  createdAt     DateTime  @default(now())
+
+  user          User?     @relation(fields: [userId], references: [id])
+}
+
+// Company Settings
+model CompanySetting {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  value         String
+  category      String?   // general, pricing, invoicing, etc
+  updatedAt     DateTime  @updatedAt
+}
