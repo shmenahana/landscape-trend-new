@@ -3,68 +3,7 @@
 import { useState } from 'react'
 import { Plus, Search, Package, AlertCircle, TrendingDown } from 'lucide-react'
 
-const mockMaterials = [
-  {
-    id: '1',
-    name: 'Premium Mulch',
-    sku: 'MLH-001',
-    category: 'Mulch & Soil',
-    unit: 'yard',
-    costPerUnit: 35.00,
-    currentStock: 45,
-    minStock: 20,
-    supplier: 'Green Supply Co',
-    usage30Days: 125
-  },
-  {
-    id: '2',
-    name: 'Topsoil',
-    sku: 'SOL-002',
-    category: 'Mulch & Soil',
-    unit: 'yard',
-    costPerUnit: 28.50,
-    currentStock: 12,
-    minStock: 15,
-    supplier: 'Green Supply Co',
-    usage30Days: 98
-  },
-  {
-    id: '3',
-    name: 'River Rock (Small)',
-    sku: 'RCK-003',
-    category: 'Stone & Gravel',
-    unit: 'ton',
-    costPerUnit: 125.00,
-    currentStock: 8,
-    minStock: 5,
-    supplier: 'Stone & Rock Depot',
-    usage30Days: 12
-  },
-  {
-    id: '4',
-    name: 'Fertilizer 10-10-10',
-    sku: 'FRT-004',
-    category: 'Fertilizer',
-    unit: 'bag',
-    costPerUnit: 22.00,
-    currentStock: 3,
-    minStock: 10,
-    supplier: 'Lawn Care Wholesale',
-    usage30Days: 45
-  },
-  {
-    id: '5',
-    name: 'Grass Seed - Kentucky Blue',
-    sku: 'SED-005',
-    category: 'Seed',
-    unit: 'bag',
-    costPerUnit: 48.00,
-    currentStock: 24,
-    minStock: 12,
-    supplier: 'Lawn Care Wholesale',
-    usage30Days: 18
-  },
-]
+const mockMaterials: any[] = []
 
 export default function MaterialsPage() {
   const [searchTerm, setSearchTerm] = useState('')

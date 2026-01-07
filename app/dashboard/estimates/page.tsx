@@ -4,48 +4,7 @@ import { useState } from 'react'
 import { Plus, Search, FileText, Clock, CheckCircle, XCircle, Eye, Send, Download } from 'lucide-react'
 import Link from 'next/link'
 
-const mockEstimates = [
-  {
-    id: '1',
-    estimateNumber: 'EST-2601-0001',
-    name: 'Williams Estate - Full Landscaping',
-    customer: 'Robert Williams',
-    totalAmount: 8500,
-    status: 'sent',
-    validUntil: '2026-02-15',
-    createdAt: '2026-01-02'
-  },
-  {
-    id: '2',
-    estimateNumber: 'EST-2601-0002',
-    name: 'Park Street Garden Design',
-    customer: 'City of Springfield',
-    totalAmount: 12000,
-    status: 'draft',
-    validUntil: '2026-02-20',
-    createdAt: '2026-01-04'
-  },
-  {
-    id: '3',
-    estimateNumber: 'EST-2601-0003',
-    name: 'Residential Lawn Maintenance',
-    customer: 'Emily Davis',
-    totalAmount: 1800,
-    status: 'approved',
-    validUntil: '2026-01-30',
-    createdAt: '2025-12-28'
-  },
-  {
-    id: '4',
-    estimateNumber: 'EST-2512-0045',
-    name: 'Commercial Plaza Renovation',
-    customer: 'ABC Corporation',
-    totalAmount: 25000,
-    status: 'rejected',
-    validUntil: '2026-01-15',
-    createdAt: '2025-12-20'
-  },
-]
+const mockEstimates: any[] = []
 
 const statusConfig = {
   draft: { icon: Clock, color: 'bg-gray-100 text-gray-800', label: 'Draft' },

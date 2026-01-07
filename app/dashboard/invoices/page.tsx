@@ -3,56 +3,7 @@
 import { useState } from 'react'
 import { Plus, Search, Receipt, Send, DollarSign, Clock } from 'lucide-react'
 
-const mockInvoices = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2601-0001',
-    customer: 'John Smith',
-    jobNumber: 'JOB-2601-0001',
-    issueDate: '2026-01-05',
-    dueDate: '2026-02-04',
-    totalAmount: 3000,
-    amountPaid: 3000,
-    status: 'paid',
-    paidDate: '2026-01-15'
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2601-0002',
-    customer: 'ABC Corporation',
-    jobNumber: 'JOB-2601-0002',
-    issueDate: '2026-01-03',
-    dueDate: '2026-02-02',
-    totalAmount: 18000,
-    amountPaid: 9000,
-    status: 'partial',
-    paidDate: null
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2512-0042',
-    customer: 'Sarah Johnson',
-    jobNumber: 'JOB-2512-0045',
-    issueDate: '2025-12-20',
-    dueDate: '2026-01-19',
-    totalAmount: 3500,
-    amountPaid: 0,
-    status: 'overdue',
-    paidDate: null
-  },
-  {
-    id: '4',
-    invoiceNumber: 'INV-2512-0038',
-    customer: 'Robert Williams',
-    jobNumber: 'JOB-2512-0038',
-    issueDate: '2026-01-02',
-    dueDate: '2026-02-01',
-    totalAmount: 9500,
-    amountPaid: 0,
-    status: 'sent',
-    paidDate: null
-  },
-]
+const mockInvoices: any[] = []
 
 const statusConfig = {
   draft: { color: 'bg-gray-100 text-gray-800', label: 'Draft' },

@@ -3,73 +3,7 @@
 import { useState } from 'react'
 import { Plus, Search, Wrench, AlertTriangle, CheckCircle } from 'lucide-react'
 
-const mockEquipment = [
-  {
-    id: '1',
-    name: 'Commercial Mower #1',
-    equipmentType: 'Mower',
-    make: 'Toro',
-    model: 'Z Master 3000',
-    year: 2022,
-    hourlyRate: 25.00,
-    dailyRate: 200.00,
-    status: 'available',
-    usage30Days: 145,
-    lastMaintenance: '2025-12-15'
-  },
-  {
-    id: '2',
-    name: 'Pickup Truck #1',
-    equipmentType: 'Truck',
-    make: 'Ford',
-    model: 'F-250',
-    year: 2021,
-    hourlyRate: 15.00,
-    dailyRate: 120.00,
-    status: 'in_use',
-    usage30Days: 220,
-    lastMaintenance: '2025-11-20'
-  },
-  {
-    id: '3',
-    name: 'Skid Steer Loader',
-    equipmentType: 'Heavy Equipment',
-    make: 'Bobcat',
-    model: 'S650',
-    year: 2023,
-    hourlyRate: 75.00,
-    dailyRate: 600.00,
-    status: 'available',
-    usage30Days: 48,
-    lastMaintenance: '2026-01-05'
-  },
-  {
-    id: '4',
-    name: 'Trailer #2',
-    equipmentType: 'Trailer',
-    make: 'Big Tex',
-    model: '14GX-16',
-    year: 2020,
-    hourlyRate: 10.00,
-    dailyRate: 80.00,
-    status: 'in_use',
-    usage30Days: 180,
-    lastMaintenance: '2025-10-10'
-  },
-  {
-    id: '5',
-    name: 'Chain Saw - Professional',
-    equipmentType: 'Hand Tool',
-    make: 'Stihl',
-    model: 'MS 661',
-    year: 2023,
-    hourlyRate: 5.00,
-    dailyRate: 40.00,
-    status: 'maintenance',
-    usage30Days: 32,
-    lastMaintenance: '2026-01-03'
-  },
-]
+const mockEquipment: any[] = []
 
 const statusConfig = {
   available: { color: 'bg-green-100 text-green-800', label: 'Available', icon: CheckCircle },

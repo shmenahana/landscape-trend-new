@@ -4,64 +4,7 @@ import { useState } from 'react'
 import { Plus, Search, Briefcase, TrendingUp, TrendingDown, Eye, Edit } from 'lucide-react'
 import Link from 'next/link'
 
-const mockJobs = [
-  {
-    id: '1',
-    jobNumber: 'JOB-2601-0001',
-    name: 'Smith Residence - Lawn Care',
-    customer: 'John Smith',
-    status: 'in_progress',
-    estimatedCost: 2500,
-    actualCost: 1625,
-    estimatedHours: 40,
-    actualHours: 26,
-    progress: 65,
-    startDate: '2026-01-02',
-    budgetedAmount: 3000
-  },
-  {
-    id: '2',
-    jobNumber: 'JOB-2601-0002',
-    name: 'Commercial Plaza Landscaping',
-    customer: 'ABC Corp',
-    status: 'in_progress',
-    estimatedCost: 15000,
-    actualCost: 6000,
-    estimatedHours: 200,
-    actualHours: 80,
-    progress: 40,
-    startDate: '2025-12-28',
-    budgetedAmount: 18000
-  },
-  {
-    id: '3',
-    jobNumber: 'JOB-2512-0045',
-    name: 'Johnson Property - Tree Removal',
-    customer: 'Sarah Johnson',
-    status: 'scheduled',
-    estimatedCost: 3200,
-    actualCost: 0,
-    estimatedHours: 16,
-    actualHours: 0,
-    progress: 0,
-    startDate: '2026-01-10',
-    budgetedAmount: 3500
-  },
-  {
-    id: '4',
-    jobNumber: 'JOB-2512-0038',
-    name: 'Williams Estate - Full Landscaping',
-    customer: 'Robert Williams',
-    status: 'completed',
-    estimatedCost: 8000,
-    actualCost: 8450,
-    estimatedHours: 120,
-    actualHours: 128,
-    progress: 100,
-    startDate: '2025-12-01',
-    budgetedAmount: 9500
-  },
-]
+const mockJobs: any[] = []
 
 const statusConfig = {
   scheduled: { color: 'bg-yellow-100 text-yellow-800', label: 'Scheduled' },

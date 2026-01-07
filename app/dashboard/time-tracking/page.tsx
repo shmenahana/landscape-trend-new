@@ -3,57 +3,9 @@
 import { useState } from 'react'
 import { Clock, MapPin, Play, Square, Users, Download } from 'lucide-react'
 
-const mockTimeEntries = [
-  {
-    id: '1',
-    user: 'Mike Johnson',
-    job: 'Smith Residence - Lawn Care',
-    jobNumber: 'JOB-2601-0001',
-    clockIn: '2026-01-06T08:00:00',
-    clockOut: '2026-01-06T12:15:00',
-    breakMinutes: 15,
-    totalHours: 4.0,
-    entryType: 'work',
-    gpsLatIn: 39.7817,
-    gpsLonIn: -89.6501,
-    status: 'completed'
-  },
-  {
-    id: '2',
-    user: 'Sarah Williams',
-    job: 'Commercial Plaza Landscaping',
-    jobNumber: 'JOB-2601-0002',
-    clockIn: '2026-01-06T08:30:00',
-    clockOut: '2026-01-06T16:45:00',
-    breakMinutes: 30,
-    totalHours: 7.75,
-    entryType: 'work',
-    gpsLatIn: 39.7984,
-    gpsLonIn: -89.6443,
-    status: 'completed'
-  },
-  {
-    id: '3',
-    user: 'Tom Davis',
-    job: 'Smith Residence - Lawn Care',
-    jobNumber: 'JOB-2601-0001',
-    clockIn: '2026-01-06T08:00:00',
-    clockOut: null,
-    breakMinutes: 0,
-    totalHours: 0,
-    entryType: 'work',
-    gpsLatIn: 39.7817,
-    gpsLonIn: -89.6501,
-    status: 'active'
-  },
-]
+const mockTimeEntries: any[] = []
 
-const mockCrewMembers = [
-  { id: '1', name: 'Mike Johnson', role: 'Crew Lead', status: 'clocked_out' },
-  { id: '2', name: 'Sarah Williams', role: 'Crew Member', status: 'clocked_out' },
-  { id: '3', name: 'Tom Davis', role: 'Crew Member', status: 'clocked_in' },
-  { id: '4', name: 'Lisa Brown', role: 'Crew Member', status: 'clocked_out' },
-]
+const mockCrewMembers: any[] = []
 
 export default function TimeTrackingPage() {
   const [selectedDate, setSelectedDate] = useState('2026-01-06')

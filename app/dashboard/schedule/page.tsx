@@ -5,58 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Users } from
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const mockEvents = [
-  {
-    id: '1',
-    title: 'Lawn Mowing - Smith Residence',
-    jobNumber: 'JOB-2601-0001',
-    startTime: '2026-01-06T08:00:00',
-    endTime: '2026-01-06T12:00:00',
-    crew: 'Crew A (3 members)',
-    color: '#3b82f6',
-    status: 'scheduled'
-  },
-  {
-    id: '2',
-    title: 'Landscaping - Johnson Property',
-    jobNumber: 'JOB-2512-0045',
-    startTime: '2026-01-06T13:00:00',
-    endTime: '2026-01-06T17:00:00',
-    crew: 'Crew B (4 members)',
-    color: '#10b981',
-    status: 'scheduled'
-  },
-  {
-    id: '3',
-    title: 'Property Assessment - Williams Estate',
-    jobNumber: 'JOB-2512-0038',
-    startTime: '2026-01-06T09:00:00',
-    endTime: '2026-01-06T11:00:00',
-    crew: 'John (Manager)',
-    color: '#f59e0b',
-    status: 'scheduled'
-  },
-  {
-    id: '4',
-    title: 'Commercial Plaza Maintenance',
-    jobNumber: 'JOB-2601-0002',
-    startTime: '2026-01-07T08:00:00',
-    endTime: '2026-01-07T16:00:00',
-    crew: 'Crew A (3 members)',
-    color: '#3b82f6',
-    status: 'scheduled'
-  },
-  {
-    id: '5',
-    title: 'Tree Removal - Johnson Property',
-    jobNumber: 'JOB-2512-0045',
-    startTime: '2026-01-08T08:00:00',
-    endTime: '2026-01-08T14:00:00',
-    crew: 'Crew B (4 members)',
-    color: '#10b981',
-    status: 'scheduled'
-  },
-]
+const mockEvents: any[] = []
 
 export default function SchedulePage() {
   const [currentDate, setCurrentDate] = useState(new Date('2026-01-06'))
