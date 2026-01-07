@@ -1,0 +1,9 @@
+Cleaning all mock data from:
+- Customers page
+- Estimates page  
+- Jobs page
+- Schedule page
+- Time tracking page
+- Materials page
+- Equipment page
+- Invoices page
