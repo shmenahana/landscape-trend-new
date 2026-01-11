@@ -1,0 +1,86 @@
+# Fili Content Automation Configuration
+# Copy this to config.yaml and fill in your credentials
+
+# Claude API Configuration
+claude:
+  api_key: "YOUR_ANTHROPIC_API_KEY_HERE"  # Get from: https://console.anthropic.com/settings/keys
+  model: "claude-sonnet-4-20250514"
+
+# GoHighLevel Configuration
+ghl:
+  api_key: "YOUR_GHL_API_KEY_HERE"  # From GHL Settings > Private Integrations
+  location_id: "YOUR_GHL_LOCATION_ID_HERE"  # From GHL Settings > Company
+
+# File Paths
+paths:
+  knowledge_base: "."  # Root directory containing knowledge/, agents/, templates/ folders
+  output: "automation/output"  # Where to save generated content
+  logs: "automation/logs"  # Log file location
+
+# Posting Configuration
+posting:
+  # Which platforms to post to
+  enabled_platforms:
+    - gbp
+    - facebook
+    - linkedin
+    - instagram
+
+  # Optimal posting times for each platform
+  schedule_times:
+    gbp: "tomorrow 8am"  # Google Business Profile
+    facebook: "tomorrow 1pm"  # Facebook
+    linkedin: "tomorrow 7:30am"  # LinkedIn (professional hours)
+    instagram: "tomorrow 11am"  # Instagram
+
+  # Spacing between posts (hours)
+  minimum_spacing: 4
+
+# Content Generation Settings
+content:
+  # Default content type if not specified
+  default_type: "weekly"
+
+  # Auto-select seasonal topics
+  use_seasonal_topics: true
+
+  # Generate graphics descriptions
+  include_graphics: true
+
+# Automation Schedule
+schedule:
+  # When to run automation (if using cron/scheduler)
+  frequency: "weekly"  # weekly, bi-weekly, monthly
+  day_of_week: "Monday"  # For weekly: Monday-Sunday
+  time: "09:00"  # 24-hour format
+
+# Notifications
+notifications:
+  enabled: true
+  method: "log"  # Options: email, slack, log
+
+  # Email settings (if method = email)
+  email:
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    from_address: "your-email@gmail.com"
+    to_address: "jordan@filipropertymaintenance.com"
+    username: "your-email@gmail.com"
+    password: "your-app-password"
+
+  # Slack settings (if method = slack)
+  slack:
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+
+# Review Mode
+review:
+  # If true, content is generated but NOT posted (for manual review)
+  enabled: false
+
+  # Require approval before posting
+  require_approval: false
+
+# Retry Settings
+retry:
+  max_attempts: 3
+  delay_seconds: 5

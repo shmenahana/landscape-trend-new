@@ -1,0 +1,34 @@
+# Fili Content Automation - Git Ignore
+
+# Configuration files with API keys (NEVER commit these!)
+config.yaml
+*.secret
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Logs
+logs/*.log
+*.log
+
+# Generated content (backup locally, don't commit)
+output/*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

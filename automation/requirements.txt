@@ -1,0 +1,15 @@
+# Fili Content Automation - Python Dependencies
+
+# Core dependencies
+anthropic>=0.18.0  # Claude API client
+pyyaml>=6.0  # Configuration file parsing
+requests>=2.31.0  # HTTP requests for GHL API
+
+# Optional dependencies for advanced features
+python-dateutil>=2.8.2  # Date/time parsing
+pytz>=2023.3  # Timezone handling
+
+# Development/testing (optional)
+pytest>=7.4.0  # Testing framework
+black>=23.0.0  # Code formatting
+flake8>=6.0.0  # Linting
