@@ -99,7 +99,7 @@ Good question! Clay soil in our area needs fall aeration because that's when roo
 - Balance of casual and credible
 - Shows experience without bragging
 - Specific examples with addresses
-- "89 five-star reviews on Google"
+- "120+ five-star reviews on Google"
 
 ## Language Choices
 
@@ -218,7 +218,7 @@ Fili Property Maintenance
 ## Proof Points to Include
 
 When relevant, mention:
-- **89 five-star Google reviews** (trust signal)
+- **120+ five-star Google reviews** (trust signal)
 - **15 years experience** (credibility)
 - **47 current lawn care clients** (active business proof)
 - **Specific project addresses** (Portage Street, Deerfield Ave, Price Street)

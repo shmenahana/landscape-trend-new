@@ -8,7 +8,7 @@ This workspace contains a complete AI agent system for creating and distributing
 
 **Owner:** Jordan Filimonuk
 **Experience:** 15 years in landscaping
-**Reputation:** 89 five-star Google reviews
+**Reputation:** 120+ five-star Google reviews
 **Client Base:** 47 residential lawn care clients in North Canton
 **Service Area:** North Canton, Canton, Louisville, Ohio
 **Focus:** Quality over quantity, transparency, local expertise

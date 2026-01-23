@@ -70,7 +70,7 @@ You have access to these resources (read them before creating content):
 - Clear CTA (call, text, or schedule estimate)
 
 **For All Content:**
-- Mention the 89 five-star Google reviews (trust signal)
+- Mention the 120+ five-star Google reviews (trust signal)
 - Include years of experience (15 years)
 - Reference current client base (47 lawn clients, multiple hardscape projects)
 - Use specific streets/neighborhoods when relevant

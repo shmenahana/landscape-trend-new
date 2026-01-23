@@ -39,7 +39,7 @@ You create branded visual content for social media posts. Your graphics use Fili
 - Clean, uncluttered layouts
 - North Canton/Canton location visible when relevant
 - Phone number when appropriate
-- "89 Five-Star Reviews" badge when space allows
+- "120+ Five-Star Reviews" badge when space allows
 
 ## Visual Content Types
 
