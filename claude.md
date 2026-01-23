@@ -9,19 +9,19 @@ This workspace contains a complete AI agent system for creating and distributing
 **Owner:** Jordan Filimonuk
 **Experience:** 15 years in landscaping
 **Reputation:** 120+ five-star Google reviews
-**Client Base:** 47 residential lawn care clients in North Canton
+**Phone:** (330) 904-4196
 **Service Area:** North Canton, Canton, Louisville, Ohio
-**Focus:** Quality over quantity, transparency, local expertise
+**Focus:** Quality workmanship, transparency, local expertise
 
 ## Agent Team
 
 This system uses 4 specialized agents that work together:
 
 ### 1. Master Content Creator (@master-content-creator)
-**Role:** Creates original, expertise-driven content
+**Role:** Creates original, expertise-driven educational content
 **Location:** `/agents/master-content-creator.md`
 **Knowledge:** Brand voice, services, local context, seasonal timing
-**Output:** Blog posts, articles, master content for adaptation
+**Output:** Blog posts, articles, comprehensive guides
 
 ### 2. Multi-Platform Distributor (@multi-platform-distributor)
 **Role:** Adapts master content for each platform
@@ -46,13 +46,13 @@ This system uses 4 specialized agents that work together:
 All agents have access to:
 
 - **Brand Voice** (`/knowledge/brand-voice.md`)
-  - How Jordan actually writes and talks
-  - Voice examples, dos and don'ts
+  - Professional, educational writing style
+  - Real examples from approved blog posts
   - Tone calibration by medium
 
 - **Services** (`/knowledge/services.md`)
   - What Fili offers
-  - Pricing context
+  - Pricing context and guidelines
   - Capabilities and limitations
 
 - **Local Context** (`/knowledge/local-context.md`)
@@ -65,7 +65,7 @@ All agents have access to:
   - Month-by-month timing for Ohio
   - Service windows
   - Content topics by season
-  - Critical dates (like September 15 for aeration)
+  - Critical dates (like September for aeration)
 
 ## Templates
 
@@ -109,27 +109,27 @@ All agents have access to:
 
 **Step 1:** @master-content-creator
 - Reads brand-voice.md, services.md, local-context.md, seasonal-calendar.md
-- Creates 1,500-2,500 word blog post
-- Includes: Jordan's voice, clay soil context, September 15 timing, local examples
-- Output: Master blog post with SEO optimization
+- Creates 1,500-2,500 word educational blog post
+- Includes: Professional helpful tone, clay soil context, September timing, local examples
+- Output: Comprehensive guide with SEO optimization
 
 **Step 2:** @multi-platform-distributor
 - Takes master content
 - Reads platform-specs.md
-- Creates 6 versions:
+- Creates versions for:
   - GBP post (1,500 chars, local keywords, phone CTA)
-  - Facebook post (200-300 words, story-driven, question)
+  - Facebook post (200-300 words, engaging, question)
   - LinkedIn post (1,300-2,000 chars, professional insight)
   - Instagram caption (hook, hashtags, engagement)
-  - Email newsletter section (subject + 200 words)
-  - Blog (passes through from master content)
+  - Email newsletter section (subject + content)
+  - Blog (from master content)
 
 **Step 3:** @visual-content-generator
-- Extracts key quote: "September 15 is THE date for aeration in North Canton clay soil"
+- Extracts key information for graphics
 - Creates 3 graphics:
-  - Quote graphic (1080x1080, forest green background)
-  - Tip list (5 signs you need aeration)
-  - Seasonal reminder (with CTA, phone number)
+  - Informational graphic (1080x1080, forest green background)
+  - Tip list or checklist
+  - Seasonal reminder (with CTA and phone number)
 
 **Step 4:** @ghl-auto-scheduler
 - Reviews all content and graphics
@@ -172,8 +172,8 @@ FiliContent/
 
 3. **Connect GoHighLevel MCP (for auto-posting)**
    - User must set up GHL Private Integration
-   - Add MCP server: `mcp add gohighlevel`
-   - Configure: GHL_API_KEY, GHL_LOCATION_ID
+   - MCP configured via .mcp.json file
+   - Credentials: GHL_API_KEY, GHL_LOCATION_ID
 
 ### Per-Request Workflow
 
@@ -195,36 +195,37 @@ When user requests content creation:
    - Present output after each major step
 
 4. **Quality check before posting**
-   - Voice sounds like Jordan? (brand-voice.md)
+   - Professional, helpful tone? (brand-voice.md)
    - Local references included? (local-context.md)
    - Timing appropriate? (seasonal-calendar.md)
    - Platform specs met? (platform-specs.md)
+   - No fabricated statistics?
 
 ## Critical Success Factors
 
 ### Content Quality Markers
 
-✅ **Sounds like Jordan** - Casual, knowledgeable, direct
-✅ **Local specificity** - Streets, neighborhoods, clay soil
-✅ **Transparent pricing** - Actual numbers when relevant
+✅ **Professional and helpful** - Educational guide, not sales pitch
+✅ **Local specificity** - North Canton, clay soil, Ohio timing
+✅ **Transparent when relevant** - Honest pricing context
 ✅ **Seasonal context** - Right timing for NE Ohio
-✅ **Expert reasoning** - WHY not just WHAT
-✅ **Proof points** - 89 reviews, 15 years, 47 clients
+✅ **Expert knowledge** - WHY not just WHAT
+✅ **Trust signals** - 120+ reviews, 15 years experience
 
-### What Makes Content Rank
+### What Makes Content Valuable
 
-**Generic AI:**
-"Fall is a great time for lawn aeration."
+**Generic content:**
+"Landscaping is important for your property."
 
-**Rankable Fili Content:**
-"In North Canton's clay-heavy soil, September 15 is THE date for aeration. Spring aeration? That's when crabgrass is germinating. I've been telling my 47 lawn clients this for years, and the ones who aerate in fall always have thicker grass by May. Here's why..."
+**Valuable Fili Content:**
+"Professional landscaping in North Canton typically returns 80-100% of investment when selling your property. Beyond financial returns, landscaping investments deliver enjoyment, outdoor living space, and pride of ownership throughout your time in the property. Quality installations create powerful first impressions while addressing North Canton's specific clay soil challenges."
 
 **The Difference:**
-- Specific date (Sept 15)
-- Local soil type (clay-heavy, North Canton)
-- Expert reasoning (crabgrass timing, root growth)
-- Proof point (47 clients)
-- Real outcome (thicker grass by May)
+- Specific value proposition (80-100% ROI)
+- Multiple benefits explained
+- Local context (North Canton, clay soil)
+- Professional expertise without pressure
+- Helpful information, not sales tactics
 
 ## System Commands
 
@@ -253,9 +254,9 @@ When user requests content creation:
 
 - **Auto-post default:** Yes (once quality is verified)
 - **Review threshold:** Major service changes or pricing content
-- **Preferred platforms:** GBP (priority), Facebook, LinkedIn, Instagram
+- **Preferred platforms:** GBP (priority), Facebook, Instagram, LinkedIn, Email
 - **Email frequency:** Bi-weekly
-- **Voice strictness:** High (must sound like Jordan)
+- **Voice strictness:** High (must match approved blog tone)
 
 ## Current Month Context
 
@@ -272,24 +273,24 @@ Check `/knowledge/seasonal-calendar.md` for:
 - Create downloadable content package
 - Show platform-specific copy/paste content
 
-**If content doesn't sound like Jordan:**
-- Review more examples in brand-voice.md
-- Ask user for feedback
-- Adjust voice in next iteration
+**If content tone is off:**
+- Review examples in brand-voice.md from approved posts
+- Check for pressure tactics or sales language
+- Ensure educational, helpful approach
 
 **If seasonal timing is off:**
 - Check seasonal-calendar.md
 - Adjust messaging for current month
-- Reference why timing matters
+- Reference why timing matters for North Canton
 
 ## Success Metrics
 
 **Content should:**
 - Rank on page 1 for local searches (3-6 months)
-- Sound exactly like Jordan wrote it
-- Generate contact inquiries
-- Build trust through transparency
-- Convert readers to customers
+- Sound professional and helpful (not pushy)
+- Provide comprehensive, valuable information
+- Build trust through transparency and expertise
+- Convert readers through value, not pressure
 
 **Track:**
 - GBP post views and calls
@@ -300,4 +301,4 @@ Check `/knowledge/seasonal-calendar.md` for:
 
 ---
 
-**System Ready:** All agents configured, knowledge base loaded, routing rules established. Ready to create content that sounds like Jordan, ranks in search, and converts to business.
+**System Ready:** All agents configured, knowledge base loaded, routing rules established. Ready to create professional, educational content that demonstrates expertise, helps homeowners, and builds trust through value rather than pressure.

@@ -2,329 +2,238 @@
 
 ## Core Voice Attributes
 
-**Authentic** - Sounds like a real person, not corporate marketing
-**Direct** - Gets to the point without fluff
-**Knowledgeable** - 15 years experience shows through
-**Honest** - Transparent about pricing, limitations, what works and doesn't
+**Educational** - Helps people understand, doesn't pressure them
+**Professional** - Expertise shows through without bragging
+**Comprehensive** - Thorough guides that actually answer questions
+**Transparent** - Honest about costs, process, and what to expect
 **Local** - Deeply connected to Canton/North Canton community
 
-## How Jordan Actually Talks
+## How Jordan Actually Writes (From Approved Blog Posts)
 
-### Written Communication Examples
+### Real Opening Examples
 
-**Email Response Style:**
+**Blog Post #1 (Landscaping Costs):**
 ```
-Hey [Name],
-
-Just took a look at the photos you sent. That retaining wall is definitely failing - I can see the lean from here.
-
-Here's the deal: railroad ties from the 90s all do this eventually. Water gets behind them, our clay soil expands/contracts, and they rot out. You're probably looking at $45-75K for a proper replacement with segmental blocks.
-
-I'll be honest - a project that tall and supporting a driveway is beyond what I typically take on. But I can put together a full info packet with options and contractor recommendations if that helps?
-
-Let me know.
-
-Jordan
-330-XXX-XXXX
+If you're considering a landscaping project for your North Canton property, understanding typical costs helps you budget appropriately and avoid surprises. Landscaping investments in North Canton range from a few hundred dollars for basic bed installations to $50,000+ for complete property transformations.
 ```
 
-**Text Message Style:**
+**Blog Post #4 (Best Time to Landscape):**
 ```
-On my way. Should be there in 15.
-
-Running about 20min late - sorry! Finishing up on Price St
+Timing your landscaping project correctly can mean the difference between a thriving outdoor space and a struggling landscape. In North Canton, Ohio, seasonal weather patterns, soil conditions, and plant growth cycles all influence when to schedule different types of landscaping work.
 ```
 
+**Blog Post #6 (Landscaping Ideas):**
 ```
-Got your estimate request. Can swing by Friday morning around 10 to take a look?
-```
-
-**Social Media Comment Response:**
-```
-Good question! Clay soil in our area needs fall aeration because that's when roots are actively growing. Spring aeration just gives crabgrass a head start 👍
+North Canton homeowners seeking landscape inspiration for 2026 will find exciting design trends blending timeless aesthetics with contemporary functionality. This comprehensive guide showcases 15 popular landscaping ideas specifically suited to North Canton properties, considering local climate, soil conditions, and neighborhood aesthetics.
 ```
 
-### Voice Characteristics Breakdown
+### Voice Characteristics From Approved Posts
 
 **What Jordan DOES say:**
-- "Here's what I'd recommend..."
-- "I've been doing this 15 years and..."
-- "Just finished a job on Portage Street that..."
-- "You're looking at around $X-Y for that"
-- "I'll be straight with you..."
-- "That's not really my specialty, but..."
-- "Our clay soil does this because..."
+- "Understanding typical costs helps you budget appropriately and avoid surprises"
+- "Professional landscape design ensures cohesive results and prevents costly mistakes"
+- "Quality landscaping typically returns 80-100% of investment when selling your property"
+- "Rather than rushing projects during marginal conditions, patient timing aligned with North Canton's climate patterns ensures better results"
+- "This comprehensive guide breaks down..."
+- "Detailed estimates should specify materials, quantities, labor components, and project timelines"
 
 **What Jordan DOESN'T say:**
-- "Our team of experts believes..."
-- "We pride ourselves on excellence..."
-- "Industry-leading solutions..."
-- "Contact us for a quote" (too formal - he says "Text me" or "Give me a call")
-- "Synergistic approach" (no business jargon ever)
+- "By mid-March you'll be kicking yourself" (too pushy)
+- "You're running out of time!" (pressure tactics)
+- "Limited slots available - act now!" (false urgency)
+- "Book today or miss out!" (aggressive sales)
+- "Our team of experts believes..." (too corporate)
 
-## Writing Patterns
+## Writing Patterns From Approved Content
 
 ### Sentence Structure
-- **Mix of long and short** - "Our clay soil needs fall aeration. Spring? That's when crabgrass germinates."
-- **Contractions always** - "You're" not "You are", "I've" not "I have"
-- **Questions for engagement** - "Anyone else notice this?" "You know what I mean?"
-- **Em dashes for emphasis** - "Railroad ties from the 90s—they're all failing now"
+- **Clear and informative** - "North Canton's predominantly clay-based soil requires special consideration for landscaping projects"
+- **Helpful guidance** - "Obtain at least three quotes from reputable North Canton landscaping companies"
+- **Expert explanations** - "Proper base preparation with adequate drainage becomes critical, occasionally adding to installation costs but preventing future settling or frost heaving issues"
 
 ### Paragraph Length
-- Short. 2-3 sentences max.
-- Single sentence paragraphs? Totally fine.
-- Especially for emphasis.
+- Moderate length (3-5 sentences)
+- Each paragraph covers one complete idea
+- Scannable with clear topic transitions
 
 ### Tone Calibration by Medium
 
-**Blog Posts:** Conversational expert
-- Still casual but more detailed
-- Includes technical info explained simply
-- Personal examples and stories
-- "Here's what most people don't know..."
+**Blog Posts:** Educational expert
+- Comprehensive and detailed
+- Helps readers make informed decisions
+- Technical info explained clearly
+- "This guide helps North Canton homeowners..."
 
-**Social Media:** Friendly neighbor
-- Very casual
-- Ask questions
-- Shorter sentences
-- "Check this out..."
+**Social Media:** Helpful neighbor
+- Conversational but still informative
+- Engagement-focused
+- Shorter, more accessible
+- Questions to encourage discussion
 
-**Email/Quotes:** Professional but personable
-- Clear and organized
-- Still uses "I" not "we"
-- Gets to numbers quickly
-- "Here's what it would cost..."
+**Email/Quotes:** Professional and clear
+- Organized information
+- Direct and practical
+- Clear pricing when appropriate
+- "Here's what you can expect..."
 
-**Website Copy:** Accessible expert
-- Balance of casual and credible
-- Shows experience without bragging
-- Specific examples with addresses
-- "120+ five-star reviews on Google"
+## Language Choices From Approved Posts
 
-## Language Choices
+### Common Phrases (Actually Used)
+- "Understanding [topic] helps you..."
+- "Professional [service] ensures..."
+- "North Canton properties present..."
+- "This comprehensive guide..."
+- "Quality [work] typically..."
+- "Experienced [professionals] understand..."
+- "Consider [option] for..."
+- "Budget for [service] to..."
 
-### Common Words/Phrases
-- "Here's the thing..."
-- "I'll be straight with you"
-- "Our clay soil" (not "local soil conditions")
-- "Around [price range]" (transparent about costs)
-- "Just finished a job on..."
-- "I've been doing this [X] years"
-- "You're looking at..."
-- "That's beyond what I typically do"
-- "Give me a call" or "Text me"
-- "Let me know"
+### Pricing Language (How It's Actually Done)
 
-### Never Uses
-- "Utilize" → Use "use"
-- "Commence" → Use "start"
-- "Facilitate" → Use "help"
-- "Solutions" → Use specific services
-- "Leverage" → Too corporate
-- "Synergy" → Delete
-- "Best in class" → Delete
-- "Thought leader" → Delete
+**When including pricing:**
+- Always with context: "typically ranges from $X-Y depending on property size and project scope"
+- Use qualifiers: "Landscape Design: $500-$3,000 depending on property size and complexity"
+- Per unit when applicable: "Paver Patios: $15-$30 per square foot"
+- Examples with ranges: "A typical North Canton patio (300-500 square feet): Basic concrete pavers: $4,500-$7,500"
 
-### Numbers and Pricing
-**Always specific:**
-- "You're looking at $45-75K" ✅
-- "Affordable pricing available" ❌
+**When NOT including specific pricing:**
+- Too variable: "Pricing depends on property size and what needs done"
+- Service-specific: "Discuss during estimate walkthrough"
+- Custom work: "Obtain detailed estimates for your specific project"
 
-- "I've done 20 of these in 3 years" ✅
-- "Extensive experience" ❌
+### Numbers and Credibility
 
-- "47 residential lawn clients" ✅
-- "Numerous satisfied customers" ❌
+**Always include:**
+- "120+ five-star reviews" ✅
+- "15 years experience" / "years of experience" ✅
+- "North Canton properties" ✅
+- Specific locations when relevant ✅
+
+**Never fabricate:**
+- ❌ "47 regular lawn clients" (don't mention client count)
+- ❌ "Turned away 15+ properties" (don't make up stats)
+- ❌ "Last year I did 20 of these" (don't invent project counts)
 
 ## Voice Examples by Content Type
 
-### Blog Post Opening (Good)
+### Blog Post Section (GOOD - From Approved Post)
 ```
-September rolls around and everyone starts asking me: "When should I aerate?"
+Professional landscaping services in North Canton typically include landscape design and planning, site preparation and grading, soil preparation and amendments, plant selection and installation, hardscape installation (patios, walkways, walls), mulch and stone installation, irrigation system design and installation, landscape lighting, drainage solutions, and ongoing maintenance and care.
 
-Here's the thing about our clay soil in North Canton—fall is THE time. Not spring like most people think. I've been preaching this for 15 years, and I can show you exactly why.
-
-Last month I aerated 14 properties between Price Street and Dogwood Park. The ones I did last fall? Their grass came back thick as carpet this spring. The ones who waited until spring? Thin and patchy.
-
-Here's what you need to know about fall aeration in NE Ohio...
+The exact services included depend on your project scope, property needs, and the landscaping company you choose. Let's explore each service category in detail.
 ```
 
-### Blog Post Opening (Bad - too corporate)
+### Cost Discussion (GOOD - From Approved Post)
 ```
-Lawn aeration is an essential component of comprehensive turf management strategies. Property owners frequently inquire about optimal timing for core aeration services.
+Paver patios represent one of the most popular North Canton landscaping investments. Total costs typically range from $15-$30 per square foot installed, depending on materials and complexity.
 
-Our team of certified landscaping professionals recommends fall aeration for optimal results in Northeast Ohio's unique soil conditions. With over a decade of industry experience, we've developed proven methodologies...
-```
+For a typical North Canton patio (300-500 square feet):
+- Basic concrete pavers: $4,500-$7,500
+- Mid-range pavers: $6,000-$12,000
+- Premium natural stone: $9,000-$15,000+
 
-### Social Media Post (Good)
-```
-Anyone else's lawn looking a little sad after this hot summer? 🔥
-
-Just aerated a yard on Deerfield yesterday. Homeowner said she's been aerating every spring for years. That's actually backwards for our clay soil.
-
-Fall aeration = thick grass next May
-Spring aeration = more crabgrass
-
-Who knew? 🤷‍♂️
-
-DM me if you want to know why this makes such a huge difference.
+These prices include proper base preparation (critical in North Canton's clay soils), paver installation, edge restraint, and polymeric sand joints.
 ```
 
-### Social Media Post (Bad - trying too hard)
+### Seasonal Guidance (GOOD - From Approved Post)
 ```
-🌟 FALL AERATION SEASON IS HERE! 🌟
+Peak spring represents the optimal planting window for most North Canton landscaping projects. Soil temperatures warm sufficiently for root growth while adequate spring moisture supports plant establishment without excessive irrigation. Trees, shrubs, and perennials planted during this window establish strong root systems before summer heat arrives.
 
-Did you know that professional lawn aeration services can transform your outdoor living space? Our certified team utilizes industry-leading equipment to deliver exceptional results!
-
-👉 Book now for premium care
-👉 Limited slots available
-👉 Satisfaction guaranteed
-
-Contact us today! ☎️
-
-#LawnCare #Professional #Quality #Excellence
+Sod installation performs exceptionally well during North Canton's spring season. Cool temperatures and frequent rainfall minimize irrigation requirements while promoting rapid rooting.
 ```
 
-### Email Quote (Good)
-```
-Hey Mike,
-
-Thanks for reaching out about your retaining wall. Based on the photos, you're looking at a full replacement—those railroad ties are too far gone to repair.
-
-Here's what you're looking at:
-
-Option 1: Segmental Block Wall
-- Height: 8.5 feet
-- Length: 75 feet
-- Cost: $45,000 - $55,000
-- Timeline: 2-3 weeks
-- Lifespan: 50+ years
-
-Option 2: Soldier Pile System
-- Same dimensions
-- Cost: $60,000 - $70,000
-- Timeline: 3-4 weeks
-- Better for keeping those trees
-
-Full disclosure: This is beyond what I typically take on—these numbers are based on what I've seen structural contractors charge for similar work. Happy to refer you to some guys I trust in the Akron area.
-
-Let me know if you want that info packet I mentioned.
-
-Jordan
-Fili Property Maintenance
-330-XXX-XXXX
-```
-
-## Proof Points to Include
+## Proof Points to Include (From Approved Posts)
 
 When relevant, mention:
 - **120+ five-star Google reviews** (trust signal)
-- **15 years experience** (credibility)
-- **47 current lawn care clients** (active business proof)
-- **Specific project addresses** (Portage Street, Deerfield Ave, Price Street)
-- **Recent project count** ("Just did 3 of these last month")
-- **Current bookings** ("Booked solid through October")
+- **15 years experience** / **years of experience** (credibility)
+- **Fili Property Maintenance** (company name)
+- **(330) 904-4196** (actual phone number, not XXX-XXXX)
+- **North Canton, Ohio** (location specificity)
+- **Stark County** (regional context)
+- **Zone 6a** (climate zone when relevant)
 
-## Local References to Use
+## Local References to Use (From Approved Posts)
 
-### Neighborhoods
-- Dogwood Park area
+### Neighborhoods Mentioned
+- Applewood
+- Sunset
+- Dogwood Park
 - Price Street
-- Wise Avenue
-- Deerfield Avenue
-- Portage Street (NE)
-- Applegrove Street
-- Mahoning Road
+- Deerfield Ave
+- Portage Street
 
 ### Cities
 Always specify:
 - North Canton (primary)
 - Canton
-- Louisville, Ohio (to distinguish from Louisville, KY)
+- Louisville, Ohio
+- Stark County
 
 ### Regional
-- Stark County
 - NE Ohio / Northeast Ohio
 - Canton area
-- Between Canton and Akron
+- Ohio's climate
 
-## Seasonal Voice Shifts
+## Seasonal Voice (From Approved Posts)
 
-### Spring (March-May)
-- Urgency about cleanup timing
-- "Now's the time before everything gets busy"
-- Emphasis on beating the rush
+### Spring
+- "Spring represents peak demand as homeowners prepare properties for summer enjoyment"
+- "Peak spring represents the optimal planting window for most North Canton landscaping projects"
+- Emphasis on proper timing and preparation
 
-### Summer (June-August)
-- Heat/drought context
-- "In this heat..." or "After this dry spell..."
-- Maintenance mode messaging
+### Fall
+- "Fall rivals spring as the absolute best planting season in North Canton"
+- "September represents the optimal month for lawn renovation in North Canton"
+- Focus on establishment before winter
 
-### Fall (September-November)
-- Prime season energy
-- "This is when we get busy"
-- Preparation for winter messaging
+### Year-Round
+- "North Canton's climate and your project goals ensures optimal results"
+- "Understanding North Canton's climate ensures your landscape thrives"
 
-### Winter (December-February)
-- Snow/ice context
-- Planning for spring
-- "When the ground thaws..."
-
-## Personality Notes
-
-- **Self-deprecating humor okay:** "I'm not a structural engineer, just a guy who digs holes for a living"
-- **Admits mistakes:** "I should have caught that sooner"
-- **Gives credit:** "My guy Jake did an amazing job on that wall"
-- **Refers competitors:** When work is outside his scope
-- **Celebrates wins:** "This one turned out perfect"
-
-## Grammar and Style
+## Grammar and Style (From Approved Posts)
 
 ### Punctuation
-- Em dashes for emphasis—like this
-- Ellipsis for trailing thought...
-- Exclamation points sparingly (only when genuinely excited!)
-- Questions end with ? obviously
+- Professional standard punctuation
+- Em dashes for added information—like this
+- Colons for lists and explanations
+- Bullet points for easy scanning
 
 ### Capitalization
-- Normal sentence case
-- Don't capitalize for emphasis (use bold or italics instead)
-- Service names: lowercase unless part of proper name
+- Standard sentence case
+- Proper nouns capitalized
+- Service names lowercase unless part of company name
 
 ### Numbers
-- Spell out one through nine
+- Spell out one through nine in body text
 - Use digits for 10+
-- Use digits for measurements (8.5 feet, not eight and a half feet)
-- Use digits for pricing ($45K not forty-five thousand dollars)
+- Use digits for all measurements and pricing
+- Use commas in large numbers ($45,000)
 
-## Emojis (Social Media Only)
+## Quality Standards (From Approved Posts)
 
-**Use sparingly:**
-- 👍 (agreement/approval)
-- 🤷‍♂️ (casual shrug)
-- 🔥 (heat/urgency)
-- 📞 (call to action)
-- 👇 (engagement - "comment below")
-
-**Never use:**
-- 💯 (trying too hard)
-- 🚀 (too startup-y)
-- 💪 (too bro-ish)
-- 🎉 (too enthusiastic)
-- Any emoji strings (one max per post)
+Every piece should:
+- ✅ Sound professional and helpful (not pushy)
+- ✅ Include specific North Canton references
+- ✅ Provide comprehensive information
+- ✅ Use accurate pricing with context when included
+- ✅ Demonstrate expertise through detailed explanations
+- ✅ Have clear structure and scannability
+- ✅ End with helpful CTA
 
 ## Final Voice Check
 
 Before publishing ANY content, ask:
 
-1. **Does this sound like Jordan?** Could you hear him saying this in person?
-2. **Is it direct?** No fluff or corporate speak?
-3. **Is it honest?** Transparent about costs/limitations?
-4. **Is it local?** Specific to Canton/North Canton?
-5. **Is it helpful?** Does it answer a real question?
+1. **Is it helpful?** Does it educate and inform without pressure?
+2. **Is it professional?** Expertise shows without being stuffy?
+3. **Is it honest?** Transparent about costs, process, expectations?
+4. **Is it local?** Specific to North Canton/Ohio conditions?
+5. **Is it comprehensive?** Thorough enough to actually help?
+6. **Is it accurate?** No made-up statistics or client counts?
 
 If the answer to any is "no," rewrite until it passes.
 
 ---
 
-**Remember:** Jordan is a real guy who's been doing this work for 15 years in the same community. He knows his clients' neighbors, remembers jobs from years ago, and isn't trying to sound like a marketing brochure. Every piece of content should feel like it came from him personally—because that's what actually converts.
+**Remember:** This is educational content that establishes expertise and helps homeowners make informed decisions. It's not aggressive sales copy. The tone is "helpful professional guide" not "urgent salesperson." Every piece should read like a comprehensive resource that happens to come from a local expert—because that's exactly what it is.

@@ -7,7 +7,7 @@
 **Experience:** 15 years in landscaping and property maintenance
 **Service Area:** Canton, North Canton, Louisville, Ohio
 **Reputation:** 120+ five-star Google reviews
-**Current Client Base:** 47 residential lawn care clients
+**Phone:** (330) 904-4196
 
 **Business Model:**
 - Family-owned, owner-operated
@@ -27,18 +27,18 @@
 - Grass clipping cleanup
 
 **Pricing Context:**
-- Weekly residential: ~$35-50 per visit (typical yard)
-- Bi-weekly available
-- Seasonal contracts preferred
+- Pricing depends on property size and specific needs
+- Seasonal contracts available
+- Quote provided after property assessment
 
-**Current Scale:**
-- 47 active residential clients
+**Service Area:**
 - Primarily North Canton area
 - Routes organized by neighborhood
+- Canton and Louisville properties considered
 
 **Seasonal Notes:**
 - Peak season: May-September
-- Book by March for consistent weekly service
+- Plan ahead for consistent weekly service
 - Fall service transitions to cleanup mode
 
 ### 2. Seasonal Cleanup
@@ -48,14 +48,14 @@
 - Cut back perennials
 - Edge beds
 - First mow of season
-- Typical cost: $150-300 depending on property size
+- Pricing depends on property size and cleanup needs
 
 **Fall Cleanup (October-November):**
 - Leaf removal (multiple visits if needed)
 - Cut down perennials
 - Final mowing
 - Gutter cleaning available
-- Typical cost: $200-500+ depending on leaf volume
+- Pricing depends on property size and leaf volume
 
 **Why Timing Matters:**
 North Canton's clay soil and weather patterns mean:
@@ -68,14 +68,14 @@ North Canton's clay soil and weather patterns mean:
 Core aeration to relieve soil compaction, followed by overseeding
 
 **Best Timing for NE Ohio:**
-- **Primary season:** September 15 - October 31
+- **Primary season:** September - mid-October
 - **Why fall:** Clay soil, active root growth, no crabgrass competition
 - Spring aeration NOT recommended (crabgrass timing)
 
 **Pricing:**
-- Aeration: $75-150 (typical residential)
-- Overseeding: $100-200 (adds to aeration)
-- Combined: $150-300
+- Typical residential lawns: $150-300 for aeration
+- Overseeding adds to cost
+- Pricing depends on lawn size and condition
 
 **Results Timeline:**
 - See thicker grass by the following May
@@ -83,29 +83,26 @@ Core aeration to relieve soil compaction, followed by overseeding
 
 **Current Demand:**
 - Books up fast in September
-- Recommend scheduling by August
+- Recommend scheduling in advance
 
 ### 4. Hardscaping
 
 **Services Offered:**
 - Paver patios
 - Walkways
-- Retaining walls (up to 4 feet)
+- Retaining walls (up to certain heights)
 - Fire pits
 - Outdoor living spaces
 
-**Specialty:**
-Segmental block retaining walls
+**Pricing Examples (from approved blog posts):**
+- Paver patios: $15-$30 per square foot depending on materials and complexity
+- Retaining walls: $25-$50 per square foot depending on height, materials, and site conditions
+- Complete outdoor spaces: Pricing varies significantly based on scope
 
 **Limitations:**
-- Walls over 6 feet: Referred to structural contractors
-- Walls supporting driveways/structures: Referred out
+- Very tall walls: May require structural engineering
+- Walls supporting driveways/structures: Referred to specialists when appropriate
 - Engineering required: Work with specialized contractors
-
-**Pricing Examples:**
-- Paver patio (12x16): $8,000-12,000
-- Retaining wall (3-4 ft, 30 linear ft): $10,000-18,000
-- Full outdoor living space: $25,000-50,000+
 
 **Timeline:**
 - Small projects: 1-2 weeks
@@ -132,14 +129,33 @@ NE Ohio clay requires:
 - Low-maintenance designs
 - Native/adapted plants for Ohio climate
 - Focus on year-round interest
-- Deer-resistant options when needed
+- Solutions appropriate for North Canton conditions
 
-**Typical Projects:**
-- Front yard makeover: $2,500-8,000
-- Full property landscape: $10,000-25,000
-- Bed refresh with plants: $1,000-3,000
+**Pricing Context (from approved blog posts):**
+- Landscape design: $500-$3,000 depending on property size and complexity
+- Basic planting & beds: $1,500-$5,000
+- Complete landscape installations: $15,000-$75,000+ depending on scope
+- Pricing varies based on property size, plant selections, and project complexity
 
-### 6. Snow Plowing & Ice Management
+### 6. Mulch Installation
+
+**Services:**
+- Fresh mulch delivery and installation
+- Bed preparation and edging
+- Professional spreading and finishing
+
+**Pricing Approach:**
+- Pricing includes time, materials, and delivery
+- Cost depends on volume needed and property size
+- Quote provided based on specific project
+
+**Benefits:**
+- Improves bed appearance
+- Conserves moisture
+- Suppresses weeds
+- Protects plants
+
+### 7. Snow Plowing & Ice Management
 
 **Season:** November - March
 
@@ -149,198 +165,164 @@ NE Ohio clay requires:
 - Walkway shoveling
 - Ice melt application
 
-**Current Clients:**
-- 10 properties on regular routes
-- Primarily residential driveways
-- Some small commercial lots
-
 **Service Area:**
 - Canton/North Canton primarily
-- Limited to areas within 15-min radius
+- Limited to reasonable service radius
 
 **Pricing:**
-- Per-visit pricing
-- Seasonal contracts available
-- Trigger depth: typically 2-3 inches
+- Per-visit or seasonal contracts available
+- Quote based on property and service needs
 
 ## What Fili Does NOT Do
 
 **Out of Scope Services:**
-- Tree removal/trimming (refers to arborists)
+- Major tree removal/trimming (refers to arborists)
 - Major grading projects (refers to excavation contractors)
-- Irrigation system installation (can do simple repairs)
-- Large retaining walls (>6 ft or structural support)
-- Commercial landscaping (focus is residential)
-- Lawn treatment/fertilization programs (occasionally done, not primary focus)
+- Complex irrigation system installation
+- Very large structural retaining walls
+- Primarily commercial landscaping (focus is residential)
 
 **Why This Matters:**
-Jordan is transparent about limitations and refers out work that requires specialized expertise. This builds trust and generates reciprocal referrals.
+Transparent about capabilities and limitations. Refers out work that requires specialized expertise. This builds trust and generates reciprocal referrals.
 
 ## Service Philosophy
 
-### Quality Over Quantity
-- Willing to turn down work that's outside expertise
-- Focus on doing fewer things really well
-- Systems in place for consistency
+### Quality Focus
+- Honest about capabilities
+- Professional systems for consistency
+- Quality materials and workmanship
+- Proper installation methods
 
 ### Transparent Pricing
-- Provides ranges upfront
+- Ranges provided when appropriate
 - Detailed quotes for major work
 - No hidden fees
-- Explains why things cost what they do
+- Context for why things cost what they do
 
 ### Local Expertise
 - Understands NE Ohio soil (clay-heavy)
 - Knows seasonal timing for the region
-- Familiar with neighborhood-specific challenges
-- Can reference past jobs on specific streets
+- Familiar with North Canton conditions
+- Local references available
 
 ### Customer Education
 - Explains WHY certain services work
-- Honest about DIY vs. professional
-- Provides maintenance tips
-- Creates detailed information packets when needed
+- Honest about options
+- Provides guidance and information
+- Helps customers make informed decisions
 
 ## Competitive Advantages
 
 1. **120+ Five-Star Reviews** - Established local reputation
-2. **15 Years Experience** - Deep knowledge of what works
-3. **Owner-Operated** - Jordan on every major project
-4. **Honest Referrals** - Will send work elsewhere if not right fit
-5. **Transparent Pricing** - No games, no surprises
-6. **Local Knowledge** - Knows the neighborhoods, soil, weather patterns
-7. **Professional Systems** - Organized, reliable, documented processes
+2. **15 Years Experience** - Deep knowledge of what works in this area
+3. **Owner-Operated** - Personal attention to projects
+4. **Honest Approach** - Transparent about capabilities and pricing
+5. **Local Knowledge** - Understands North Canton conditions
+6. **Professional Service** - Organized, reliable, documented
 
 ## Target Customer
 
 **Primary:**
 - Residential homeowners
 - North Canton, Canton, Louisville
-- Middle to upper-middle income
-- Value quality and reliability over lowest price
-- Want personalized service, not "crew #7"
+- Value quality and reliability
+- Want personalized service
+- Appreciate transparent communication
 
-**Secondary:**
+**Also Serves:**
 - Small commercial properties
-- Property managers (2-5 unit buildings)
-- Real estate investors (cleanup between tenants)
+- Property managers
+- Real estate-related projects
 
-**Not Targeting:**
-- Large commercial contracts
-- HOA master contracts
-- High-maintenance estate properties
-- Customers shopping purely on price
+**Best Fit:**
+- Customers who value quality workmanship
+- Want clear communication
+- Appreciate honest recommendations
+- Understand value beyond lowest price
 
 ## Seasonal Service Mix
 
 **Spring (March-May):**
-- Spring cleanups (high volume)
+- Spring cleanups
 - Landscape installations
-- Mulch delivery
-- Weekly mowing starts
+- Mulch delivery and installation
+- Weekly mowing begins
 
 **Summer (June-August):**
-- Weekly mowing (primary focus)
-- Spot landscape projects
-- Retaining walls and hardscaping
-- Maintenance mode
+- Weekly mowing
+- Landscape projects
+- Hardscaping
+- Maintenance focus
 
 **Fall (September-November):**
-- Aeration boom (busiest time)
+- Aeration season (high demand)
 - Fall cleanups
-- Last landscape installations
-- Hardscape projects wrap up
+- Final landscape installations
+- Hardscape projects
 
 **Winter (December-February):**
 - Snow plowing (weather dependent)
-- Planning/scheduling spring work
-- Equipment maintenance
-- Marketing and business development
+- Planning spring projects
+- Consultations and estimates
 
 ## Pricing Philosophy
 
-**Transparent But Not Cheap:**
-- Mid-to-upper range pricing
-- Quality materials and work
-- Includes proper prep and drainage
+**Professional and Fair:**
+- Quality materials and workmanship
+- Proper installation methods
+- Transparent about costs
 - No cutting corners
 
-**Why This Works:**
-- Attracts customers who value quality
-- Reduces price-shopping calls
-- Sets expectations upfront
-- Builds long-term client relationships
+**Context-Based Pricing:**
+- Ranges provided with qualifiers
+- "Depending on property size and scope"
+- Detailed quotes for major projects
+- Honest about what affects price
 
-**Sample Positioning:**
-"You're looking at $45-55K for a segmental block retaining wall done right—with proper drainage, compacted base, and materials that'll last 50+ years. If someone quotes you $25K, ask what they're cutting."
+**From Approved Blog Content:**
+- Landscape Design: "$500-$3,000 depending on property size and complexity"
+- Paver Patios: "$15-$30 per square foot"
+- Complete Installations: "$15,000-$75,000+ depending on property size and features included"
+- Always includes context about what affects the price
 
 ## Geographic Service Notes
 
 ### North Canton
 - Primary service area
-- 47 of the 47 current lawn clients
-- Knows neighborhoods well
-- Most referrals come from here
+- Deep knowledge of neighborhoods
+- Most business comes from here
+- Strong referral network
 
 ### Canton
 - Secondary area
 - Selective projects
-- Typically larger hardscape jobs
-- Less weekly maintenance
+- Both maintenance and major projects
 
 ### Louisville, Ohio
 - Included in service area
-- Smaller client base
 - Growing through referrals
+- Residential focus
 
-### What's Too Far:
-- Akron (refers to local contractors)
-- Massillon (too far for weekly maintenance)
-- Alliance (outside typical radius)
-
-## Equipment & Capabilities
-
-**Current Fleet:**
-- Commercial mowers
-- Aerator (walk-behind and tow-behind options)
-- Plate compactor (for hardscape)
-- Dump trailer
-- Snow plow truck
-
-**Capacity Constraints:**
-- Can handle 50-60 weekly lawn clients max
-- 3-5 major hardscape projects per season
-- Limited by Jordan's oversight availability
-
-## Growth Strategy
-
-**Current Focus:**
-- Maintain quality with existing clients
-- Selective growth through referrals
-- Systems and automation to reduce owner bottlenecks
-- Delegation to enable scaling
-
-**Not Interested In:**
-- Massive growth just for size
-- Compromising quality for quantity
-- Work outside core competencies
-- Competing on price alone
+### Service Radius:
+- Focused on local area for quality service
+- Refers out work beyond reasonable radius
+- Maintains efficiency and response time
 
 ## Content Opportunities by Service
 
 ### High-Value Topics:
-1. **Aeration timing** (massive local interest, counter-intuitive)
-2. **Retaining wall cost transparency** (no one else publishes this)
+1. **Aeration timing** (massive local interest, counter-intuitive advice)
+2. **Landscape cost transparency** (fills information gap)
 3. **Clay soil challenges** (very specific to region)
-4. **Fall vs spring lawn work** (educational, SEO gold)
-5. **DIY vs professional** (establishes expertise, shows honesty)
+4. **Seasonal timing guides** (educational, local SEO)
+5. **Professional vs DIY guidance** (establishes expertise, shows honesty)
 
 ### Seasonal Content:
-- "When to aerate in North Canton" (September)
-- "Spring cleanup checklist" (March)
-- "Retaining wall drainage requirements" (Year-round but peaks in spring)
-- "Snow plowing rates Canton area" (November)
+- Aeration timing and benefits (September focus)
+- Spring cleanup preparation (March)
+- Landscape planning guides (Winter)
+- Seasonal maintenance checklists (All seasons)
 
 ---
 
-**For Content Creation:** Use this knowledge to ground every piece in real services, real pricing, real limitations. The specificity is what makes Fili content rank and convert—anyone can say "we do quality work," but only Jordan can say "I just did a 45-foot segmental wall on Portage Street for $38K, and here's why that price is actually fair."
+**For Content Creation:** Use this knowledge to create helpful, informative content grounded in real services and honest pricing context. Specificity and transparency are what make content valuable—anyone can say "we do quality work," but providing actual information, context, and guidance is what builds trust and converts readers.
