@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
+
 const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
