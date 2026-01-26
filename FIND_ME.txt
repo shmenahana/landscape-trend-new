@@ -1,0 +1,20 @@
+🎯 YOU FOUND THE RIGHT FOLDER! 🎯
+
+This is where Claude Code is working.
+
+Copy your "content system" folder HERE!
+
+The folder should contain:
+- brand voice
+- claude
+- ghl auto scheduler
+- local context
+- master content creator
+- multi platform distributor
+- platform specs
+- seasonal calendar
+- services
+- setup guide
+- visual content generator
+
+After copying, come back to the chat and let me know!

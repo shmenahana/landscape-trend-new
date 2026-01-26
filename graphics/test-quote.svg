@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1080" height="1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="#2C5F2D"/>
+
+  <!-- Quote text -->
+  <text x="540" y="490"
+        font-family="Arial, sans-serif"
+        font-size="56"
+        font-weight="bold"
+        fill="#FFFFFF"
+        text-anchor="middle"
+        dominant-baseline="middle">
+    <tspan x="540" dy="0">January planning provides</tspan>
+    <tspan x="540" dy="70">better scheduling and optimal</tspan>
+    <tspan x="540" dy="70">project timing for the season</tspan>
+    <tspan x="540" dy="70">ahead.</tspan>
+  </text>
+
+  <!-- Attribution -->
+  <text x="540" y="930"
+        font-family="Arial, sans-serif"
+        font-size="28"
+        fill="#FFFFFF"
+        text-anchor="middle">
+    — Fili Property Maintenance
+  </text>
+</svg>

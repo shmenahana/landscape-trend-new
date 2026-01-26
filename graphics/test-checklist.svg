@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1080" height="1350" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background -->
+  <rect width="1080" height="1350" fill="#FFFFFF"/>
+
+  <!-- Green header -->
+  <rect width="1080" height="200" fill="#2C5F2D"/>
+  <text x="540" y="120"
+        font-family="Arial, sans-serif"
+        font-size="56"
+        font-weight="bold"
+        fill="#FFFFFF"
+        text-anchor="middle">
+    PLAN NOW FOR:
+  </text>
+
+  
+    <!-- Item 1 -->
+    <rect x="50" y="290" width="40" height="40"
+          fill="none" stroke="#333333" stroke-width="3"/>
+    <text x="120" y="315"
+          font-family="Arial, sans-serif"
+          font-size="28"
+          fill="#333333">
+      Spring Cleanup (March-April)
+    </text>
+
+    <!-- Item 2 -->
+    <rect x="50" y="410" width="40" height="40"
+          fill="none" stroke="#333333" stroke-width="3"/>
+    <text x="120" y="435"
+          font-family="Arial, sans-serif"
+          font-size="28"
+          fill="#333333">
+      Fall Aeration ($150-300)
+    </text>
+
+    <!-- Item 3 -->
+    <rect x="50" y="530" width="40" height="40"
+          fill="none" stroke="#333333" stroke-width="3"/>
+    <text x="120" y="555"
+          font-family="Arial, sans-serif"
+          font-size="28"
+          fill="#333333">
+      Hardscape Projects
+    </text>
+
+    <!-- Item 4 -->
+    <rect x="50" y="650" width="40" height="40"
+          fill="none" stroke="#333333" stroke-width="3"/>
+    <text x="120" y="675"
+          font-family="Arial, sans-serif"
+          font-size="28"
+          fill="#333333">
+      Landscape Design
+    </text>
+
+  <!-- Green footer -->
+  <rect y="1200" width="1080" height="150" fill="#2C5F2D"/>
+  <text x="540" y="1285"
+        font-family="Arial, sans-serif"
+        font-size="28"
+        fill="#FFFFFF"
+        text-anchor="middle">
+    Fili Property Maintenance • (330) 904-4196
+  </text>
+</svg>
