@@ -1,0 +1,118 @@
+# Rank Math Settings Audit Checklist for filipropmaint.com
+# ========================================================
+# Log into WordPress Admin > Rank Math and verify each setting below.
+# Check off each item as you go.
+
+## 1. General Settings > Edit robots.txt
+# Expected robots.txt (should match what's in htaccess-redirects.conf):
+# -------
+# User-agent: *
+# Disallow: /wp-admin/
+# Allow: /wp-admin/admin-ajax.php
+#
+# Sitemap: https://filipropmaint.com/sitemap_index.xml
+# -------
+# ACTION: If there are ANY extra Disallow rules (especially "Disallow: /"),
+#         REMOVE THEM IMMEDIATELY. Only /wp-admin/ should be disallowed.
+# STATUS: [ ]
+
+## 2. Titles & Meta > Global Meta
+# - Robots Meta: Should be "index" (NOT noindex)
+# - Ensure "Noindex Empty Category and Tag Archives" is ON
+# STATUS: [ ]
+
+## 3. Titles & Meta > Posts
+# - Single Posts: Robots Meta = "index, follow"
+# - This covers all blog posts
+# STATUS: [ ]
+
+## 4. Titles & Meta > Pages
+# - Single Pages: Robots Meta = "index, follow"
+# - This covers ALL service pages and city pages
+# - CRITICAL: Do NOT set pages to noindex globally
+# STATUS: [ ]
+
+## 5. Titles & Meta > Tags
+# - Tag Archives: Robots Meta = "noindex, follow"
+# - Tag archives create duplicate thin content
+# STATUS: [ ]
+
+## 6. Titles & Meta > Categories
+# - Category Archives: Robots Meta = "noindex, follow"
+# - Especially these problem categories:
+#   - /category/lawncare/
+#   - /category/power-washing/
+#   - /category/tree-removal-services/
+#   - /category/landscaping/
+# STATUS: [ ]
+
+## 7. Titles & Meta > Misc Pages
+# - Search Results: Robots Meta = "noindex, nofollow"  (/?s= pages)
+# - 404 Page: Robots Meta = "noindex, nofollow"
+# - RSS Feed: Should NOT be indexed
+# STATUS: [ ]
+
+## 8. Sitemap Settings
+# - HTML Sitemap: ON
+# - XML Sitemap: ON
+# - Include Posts: ON
+# - Include Pages: ON  <-- CRITICAL for service/city pages
+# - Include Categories: OFF (since we noindex them)
+# - Include Tags: OFF (since we noindex them)
+# - Verify sitemap at: https://filipropmaint.com/sitemap_index.xml
+# STATUS: [ ]
+
+## 9. Per-Page Robots Check (CRITICAL)
+# Open each of these pages in WordPress editor and check the Rank Math
+# meta box. Ensure NONE of them have "noindex" checked:
+#
+# SERVICE / CITY PAGES (must be INDEX, FOLLOW):
+# - /landscaping-north-canton-ohio/
+# - /lawn-care-canton-ohio/
+# - /lawn-care-akron-ohio/
+# - /lawn-care-green-ohio/
+# - /landscaping-louisville-ohio/
+# - /lawn-care-louisville-ohio/
+# - /landscaping-in-canton-oh-the-premier-name-in-lawn-grounds-care-services/
+# - /estimates/  <-- CRITICAL lead gen page
+# - /paver-patio-construction/
+# - /planting-trees-shrubs-and-bushes/
+# - /retaining-wall-construction/
+# - /aeration-and-overseeding/
+#
+# BLOG POSTS (must be INDEX, FOLLOW):
+# - /popular-softscape-landscaping-ideas/
+# - /how-to-landscape-with-rocks-natural-stones/
+# - /hiring-a-landscape-maintenance-company/
+# - /getting-your-lawn-ready-for-summer/
+# - /plant-hardiness-zones-and-how-to-choose-the-best-plants-for-your-zone/
+# - /why-you-should-add-fresh-mulch-to-your-landscape-and-garden-beds/
+# - /how-to-give-your-garden-a-spring-makeover/
+# - /the-fall-is-a-great-time-to-give-your-lawn-some-attention/
+# - /how-to-fix-brown-patches-in-your-lawn/
+# - /how-and-when-to-apply-fertilizer-to-your-lawn/
+#
+# PAGES THAT SHOULD BE NOINDEX:
+# - /thank-you/  → noindex, nofollow
+# - /landing-page/  → noindex, nofollow (or delete)
+# STATUS: [ ]
+
+## 10. WordPress Settings > Reading
+# - "Discourage search engines from indexing this site" must be UNCHECKED
+# - Go to: Settings > Reading > scroll to bottom
+# - If this is checked, it adds <meta name="robots" content="noindex, nofollow">
+#   to EVERY page on the site — this would explain all indexing issues
+# STATUS: [ ]
+
+## 11. Permalink Settings
+# - Verify set to "Post name" (/%postname%/)
+# - Flush permalinks: Settings > Permalinks > click Save (without changing anything)
+# STATUS: [ ]
+
+## 12. Firewall / Security Plugin Check
+# - CRITICAL: The site returns 403 Forbidden to all automated requests
+# - Check Cloudflare, Wordfence, Sucuri, or hosting-level WAF rules
+# - Ensure Googlebot user-agent is NOT blocked
+# - Ensure /robots.txt is accessible without authentication
+# - Test: Use Google's URL Inspection tool in GSC to see if Google can reach the site
+# STATUS: [ ]
