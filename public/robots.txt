@@ -1,0 +1,35 @@
+# robots.txt for filipropmaint.com
+# Allow all search engines to crawl and index all pages
+
+User-agent: *
+Allow: /
+
+# Allow township and city service pages
+Allow: /services/
+Allow: /township/
+Allow: /city/
+Allow: /locations/
+Allow: /areas-we-serve/
+
+# Block only admin, private, and duplicate content paths
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /wp-includes/
+Disallow: /wp-content/plugins/
+Disallow: /wp-content/cache/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /my-account/
+Disallow: /?s=
+Disallow: /search/
+Disallow: /*?replytocom=
+Disallow: /xmlrpc.php
+Disallow: /readme.html
+
+# Allow CSS and JS for proper rendering
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/
+
+# Sitemaps
+Sitemap: https://filipropmaint.com/sitemap_index.xml
+Sitemap: https://filipropmaint.com/sitemap.xml
