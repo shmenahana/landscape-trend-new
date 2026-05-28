@@ -10,17 +10,17 @@
   height: 11in;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2.25in 2.25in 2.25in;
-  grid-template-rows: 2.25in 2.25in 2.25in;
+  grid-template-columns: 2.5in 2.5in 2.5in;
+  grid-template-rows: 2.5in 2.5in 2.5in;
   gap: 0.15in;
-  padding: 1.975in 0.725in;
+  padding: 1.6in 0.35in;
   box-sizing: border-box;
   background: #fff;
 }
 
 .print-cell {
-  width: 2.25in;
-  height: 2.25in;
+  width: 2.5in;
+  height: 2.5in;
   overflow: hidden;
   background: #fff;
   display: block;
