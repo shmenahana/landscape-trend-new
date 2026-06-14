@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Keep number inputs tidy across browsers. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* When printing the receipt, hide the site header/footer and show only the
+   printable ticket on a clean white page. */
+@media print {
+  header,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
