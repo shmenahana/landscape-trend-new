@@ -14,6 +14,10 @@
   --charcoal: #3A3632;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   background: var(--cream);
   color: var(--charcoal);
@@ -28,15 +32,28 @@ h1, h2, h3, h4 {
 }
 
 .awning {
+  position: relative;
   background: repeating-linear-gradient(
     90deg,
     var(--navy) 0,
     var(--navy) 28px,
-    var(--warmwhite) 28px,
-    var(--warmwhite) 56px
+    var(--cream) 28px,
+    var(--cream) 56px
   );
+  height: 56px;
+  margin-bottom: 14px;
+}
+.awning::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 0;
+  right: 0;
   height: 14px;
-  border-bottom: 2px solid var(--navydark);
+  background:
+    linear-gradient(135deg, #2B3856 33.33%, transparent 33.33%) 0 0,
+    linear-gradient(225deg, #2B3856 33.33%, transparent 33.33%) 0 0;
+  background-size: 28px 14px;
 }
 
 .heart-divider {
@@ -121,6 +138,64 @@ h1, h2, h3, h4 {
   color: var(--navy);
   margin-bottom: 6px;
   display: block;
+}
+
+.event-card {
+  background: var(--warmwhite);
+  border: 1px solid var(--bordercream);
+  border-top: 3px solid transparent;
+  border-radius: 6px;
+  padding: 28px;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.event-card:hover {
+  border-top-color: var(--navy);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(43, 56, 86, 0.08);
+}
+
+.pricing-card {
+  background: var(--warmwhite);
+  border: 1px solid var(--bordercream);
+  border-radius: 6px;
+  padding: 32px 28px;
+  text-align: center;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.pricing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(43, 56, 86, 0.08);
+}
+
+.footer-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--goldmuted);
+  font-size: 14px;
+  letter-spacing: 0.3em;
+}
+.footer-divider::before,
+.footer-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid rgba(160, 120, 72, 0.35);
+  max-width: 120px;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+.reveal.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
 }
 
 @media print {

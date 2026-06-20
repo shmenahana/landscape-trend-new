@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, rowToOrder, type OrderRow } from "@/lib/db";
+import { isOperator } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,6 +9,9 @@ const PICKUP_MESSAGE =
   "Your magnets are ready! 🧲 Swing by The Magnet Parlor table to pick them up.";
 
 export async function POST(req: NextRequest) {
+  if (!(await isOperator(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { orderId } = await req.json().catch(() => ({}));
   if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
 

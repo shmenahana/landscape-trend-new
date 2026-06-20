@@ -5,25 +5,49 @@
   min-height: 100vh;
 }
 
-.print-sheet {
+/* --- 2x2 Square magnets — 3×3 grid on portrait 8.5×11 ---
+   2.4"×2.4" cells (covers the full 2" magnet + extra bleed; sized up from
+   2.25" because operators were seeing white edges on the magnet face).
+   Horizontal: 0.25" L/R + 3×2.4 + 2×0.4 = 8.5" ✓
+   Vertical:   1.5"  T/B + 3×2.4 + 2×0.4 = 11"  ✓
+*/
+.print-sheet-2x2 {
+  width: 8.5in;
+  height: 11in;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2.4in 2.4in 2.4in;
+  grid-template-rows: 2.4in 2.4in 2.4in;
+  gap: 0.4in;
+  padding: 1.5in 0.25in;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+/* --- 2x3 Rectangular magnets — 3×3 grid on portrait 8.5×11 ---
+   2.25"×3.25" cells (2"×3" magnet + ⅛" bleed each side).
+   Horizontal: 0.25" L/R + 3×2.25 + 2×0.625 = 8.5" ✓
+   Vertical:   0.25" T/B + 3×3.25 + 2×0.375 = 11"  ✓
+*/
+.print-sheet-2x3 {
   width: 8.5in;
   height: 11in;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 2.25in 2.25in 2.25in;
-  grid-template-rows: 2.25in 2.25in 2.25in;
-  gap: 0.15in;
-  padding: 1.975in 0.725in;
+  grid-template-rows: 3.25in 3.25in 3.25in;
+  column-gap: 0.625in;
+  row-gap: 0.375in;
+  padding: 0.25in;
   box-sizing: border-box;
   background: #fff;
 }
 
 .print-cell {
-  width: 2.25in;
-  height: 2.25in;
   overflow: hidden;
   background: #fff;
   display: block;
+  position: relative;
 }
 
 .print-cell img {
@@ -34,23 +58,40 @@
   image-rendering: -webkit-optimize-contrast;
 }
 
-.print-trigger-btn {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  padding: 10px 18px;
-  background: #2B3856;
-  color: #FFFAF4;
-  border: 0;
-  border-radius: 4px;
-  font-family: 'Playfair Display', Georgia, serif;
-  cursor: pointer;
-  z-index: 10;
+.print-cell-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 8pt;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 1px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Stock cells: dashed outline so the operator can spot them after cutting. */
+.print-cell-stock {
+  outline: 2px dashed #6B6058;
+  outline-offset: -2px;
+}
+.print-cell-name-stock {
+  background: #6B6058;
 }
 
 @media print {
-  @page { size: 8.5in 11in; margin: 0; }
-  html, body { background: #fff !important; margin: 0; padding: 0; }
-  .no-print, .print-trigger-btn { display: none !important; }
-  .print-sheet { box-shadow: none; }
+  /* @page rule is injected per-render by app/print/page.tsx so the paper size
+     matches the magnet size (both portrait now). */
+  html, body {
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+  }
+  .no-print { display: none !important; }
+  .print-sheet-2x2, .print-sheet-2x3 { box-shadow: none; }
 }

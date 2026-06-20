@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isOperator } from "@/lib/auth";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
@@ -17,7 +18,10 @@ function rowToBatch(r: BatchRow) {
   return { ...r, orders: JSON.parse(r.orders || "[]"), printed: !!r.printed };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await isOperator(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const row = db
     .prepare("SELECT * FROM batches WHERE printed = 0 ORDER BY datetime(createdAt) DESC LIMIT 1")
     .get() as BatchRow | undefined;
@@ -26,6 +30,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await isOperator(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const body = await req.json().catch(() => ({}));
   const { id, orderIds, slots, printed } = body as {
     id?: string;

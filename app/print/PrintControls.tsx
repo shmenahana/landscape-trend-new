@@ -2,19 +2,11 @@
 
 import { useEffect } from "react";
 
-export default function PrintControls() {
+export default function PrintControls({ delayMs = 500 }: { delayMs?: number }) {
   useEffect(() => {
-    const t = setTimeout(() => window.print(), 600);
+    const t = setTimeout(() => window.print(), delayMs);
     return () => clearTimeout(t);
-  }, []);
+  }, [delayMs]);
 
-  return (
-    <button
-      onClick={() => window.print()}
-      className="no-print print-trigger-btn"
-      aria-label="Print"
-    >
-      Print Now
-    </button>
-  );
+  return null;
 }

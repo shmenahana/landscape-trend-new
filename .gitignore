@@ -6,6 +6,9 @@ dist
 .env.local
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
+.claude/deploy/*.tar.gz
 public/uploads
 .DS_Store
 next-env.d.ts
