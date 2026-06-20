@@ -7,7 +7,7 @@ import fs from "fs/promises";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VALID_STATUS = new Set(["pending", "batched", "printing", "ready", "picked_up", "shipped"]);
+const VALID_STATUS = new Set(["pending", "batched", "printing", "ready", "picked_up", "shipped", "archived"]);
 const VALID_PAYMENT_STATUS = new Set(["paid", "cash_pending", "cash_confirmed"]);
 
 export async function PATCH(

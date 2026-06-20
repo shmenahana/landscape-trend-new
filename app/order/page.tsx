@@ -45,6 +45,8 @@ export default function CustomerOrderPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [pendingOrderCode, setPendingOrderCode] = useState<string>("");
   const [waitingStatus, setWaitingStatus] = useState<string>("cash_pending");
+  // Market orders ahead of this one when it was submitted — drives the wait estimate.
+  const [ordersAhead, setOrdersAhead] = useState<number>(0);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -165,6 +167,7 @@ export default function CustomerOrderPage() {
       setPendingOrderId(j.order.id);
       setPendingOrderCode(j.order.orderCode || "");
       setWaitingStatus(j.order.paymentStatus);
+      setOrdersAhead(typeof j.ordersAhead === "number" ? j.ordersAhead : 0);
       return j.order;
     } catch (e: any) {
       setError(e.message || "Something went wrong. Try again.");
@@ -500,6 +503,18 @@ export default function CustomerOrderPage() {
             </div>
             <h1 className="font-serif text-4xl text-navy mt-6">You&apos;re all set!</h1>
             <div className="heart-divider my-6"><span>♥</span></div>
+
+            {(() => {
+              const est = waitEstimate(ordersAhead);
+              return (
+                <div className="parlor-card p-5 mb-6">
+                  <p className="text-xs text-warmgray uppercase tracking-widest">Estimated Wait</p>
+                  <p className="font-serif text-navy text-2xl mt-1 leading-tight">{est.headline}</p>
+                  {est.detail && <p className="text-gold font-serif text-lg mt-1">{est.detail}</p>}
+                </div>
+              );
+            })()}
+
             <p className="text-warmgray text-lg leading-relaxed">
               We&apos;ll text you at <span className="text-charcoal font-semibold">{prettyPhone}</span> when your
               magnets are ready.
@@ -515,6 +530,20 @@ export default function CustomerOrderPage() {
       </footer>
     </main>
   );
+}
+
+// Rough wait estimate from the number of market orders ahead in the queue.
+// ~5 min per order (print, cut, press); minimum band is 5-10 minutes.
+function waitEstimate(ordersAhead: number): { headline: string; detail: string } {
+  const low = Math.max(5, ordersAhead * 5);
+  const high = low + 5;
+  if (ordersAhead <= 0) {
+    return { headline: "You're first in line!", detail: `About ${low}-${high} minutes` };
+  }
+  if (ordersAhead === 1) {
+    return { headline: "You're next!", detail: `About ${low}-${high} minutes` };
+  }
+  return { headline: `Estimated wait: ${low}-${high} minutes`, detail: "" };
 }
 
 function Landing({ onStart }: { onStart: () => void }) {

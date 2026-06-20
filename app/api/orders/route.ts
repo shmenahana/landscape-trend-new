@@ -174,6 +174,16 @@ export async function POST(req: NextRequest) {
   const paymentStatus = paymentMethod === "stripe" ? "paid" : "cash_pending";
   const orderCode = paymentMethod === "cash" ? generateOrderCode() : "";
 
+  // Wait-time estimate (market only): how many market orders are already in the
+  // active queue ahead of this one. Counted BEFORE inserting so the new order
+  // isn't included. Archived/ready/picked-up and all shipped orders are excluded.
+  const aheadRow = db
+    .prepare(
+      "SELECT COUNT(*) AS n FROM orders WHERE orderType = 'market' AND status IN ('pending','printing')"
+    )
+    .get() as { n: number };
+  const ordersAhead = aheadRow.n;
+
   db.prepare(
     `INSERT INTO orders
        (id, firstName, phone, package, status, photos, magnetSize,
@@ -187,5 +197,5 @@ export async function POST(req: NextRequest) {
   );
 
   const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as OrderRow;
-  return NextResponse.json({ order: rowToOrder(row) }, { status: 201 });
+  return NextResponse.json({ order: rowToOrder(row), ordersAhead }, { status: 201 });
 }

@@ -22,7 +22,17 @@
 - [ ] npm run build passes
 - [ ] commit on branch, deploy to VPS, preserve .env (do NOT rotate dashboard password)
 
-## Review
+## Dashboard improvements (round 2)
+- [x] Clickable prominent phone on order cards (sms: link, near top of card)
+- [x] Estimated wait on /order confirm (server returns ordersAhead = market
+      pending/printing; ~5min/order, min 5-10, "first/next" copy)
+- [x] Archive status: Archive/Unarchive buttons, collapsed Archived section,
+      excluded from active queue + wait time + batch hopper
+- [x] Market Queue vs Online Orders cleanly separated/labeled (market primary,
+      online moved to secondary section at bottom of right panel)
+- [x] build passes; deploy
+
+## Review (round 1)
 - SMS: Twilio send was already built in /api/notify (exact message). Added required
   consent checkbox on /order (blocks Continue), `smsConsent` boolean column + storage,
   and updated operator alert to "SMS failed — notify customer manually".

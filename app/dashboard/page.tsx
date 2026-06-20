@@ -324,6 +324,26 @@ export default function Dashboard() {
     refresh();
   }
 
+  async function archiveOrder(o: Order) {
+    await fetch(`/api/orders/${o.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "archived" }),
+    });
+    // Pull it off the print sheet (client-side) if it happened to be placed.
+    removeOrderFromSheet(o.id);
+    refresh();
+  }
+
+  async function unarchiveOrder(o: Order) {
+    await fetch(`/api/orders/${o.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "pending" }),
+    });
+    refresh();
+  }
+
   async function markShipped(o: Order, trackingNumber: string) {
     const res = await fetch("/api/ship", {
       method: "POST",
@@ -343,9 +363,12 @@ export default function Dashboard() {
     refresh();
   }
 
+  // Archived orders (any type) are hidden from every active view and the wait
+  // estimate. They sit in their own collapsed section until unarchived.
+  const archivedOrders = orders.filter((o) => o.status === "archived");
   // Market orders only — online/shipped orders live in their own section and
-  // never enter the print sheet builder.
-  const marketOrders = orders.filter((o) => o.orderType !== "shipped");
+  // never enter the print sheet builder. Archived excluded.
+  const marketOrders = orders.filter((o) => o.orderType !== "shipped" && o.status !== "archived");
   // Cash orders that haven't been confirmed yet — they sit in a separate
   // section and are NOT in the print queue until the operator collects cash.
   const cashPendingOrders = marketOrders.filter((o) => o.paymentStatus === "cash_pending");
@@ -356,7 +379,7 @@ export default function Dashboard() {
   const completedOrders = marketOrders.filter((o) => o.status === "picked_up");
 
   // Online (shipped) orders. Awaiting shipment first, then already shipped.
-  const shippedOrders = orders.filter((o) => o.orderType === "shipped");
+  const shippedOrders = orders.filter((o) => o.orderType === "shipped" && o.status !== "archived");
   const awaitingShipment = shippedOrders.filter((o) => o.status !== "shipped");
   const alreadyShipped = shippedOrders.filter((o) => o.status === "shipped");
 
@@ -444,14 +467,19 @@ export default function Dashboard() {
           )}
 
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg text-navy">Order Queue</h2>
+            <div>
+              <h2 className="font-serif text-lg text-navy">Market Queue</h2>
+              <p className="text-[10px] text-warmgray uppercase tracking-widest">
+                In-person orders · {activeOrders.length} active
+              </p>
+            </div>
             <button onClick={refresh} className="text-xs text-gold uppercase tracking-widest">
               Refresh
             </button>
           </div>
           {activeOrders.length === 0 && !loading && (
             <p className="text-sm text-warmgray italic mt-6 text-center">
-              No active orders yet.
+              No active market orders yet.
             </p>
           )}
           {activeOrders.map((o) => (
@@ -465,6 +493,7 @@ export default function Dashboard() {
               onNotify={() => notifyReady(o)}
               onPickedUp={() => markPickedUp(o)}
               onDelete={() => setDeleteTarget(o)}
+              onArchive={() => archiveOrder(o)}
             />
           ))}
           {completedOrders.length > 0 && (
@@ -490,48 +519,30 @@ export default function Dashboard() {
               </div>
             </details>
           )}
+
+          {archivedOrders.length > 0 && (
+            <details className="mt-4">
+              <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                Archived ({archivedOrders.length})
+              </summary>
+              <p className="text-[10px] text-warmgray mt-2 mb-2 leading-snug">
+                Held out of the active queue and the wait estimate. Unarchive to bring back.
+              </p>
+              <div className="space-y-2 opacity-90">
+                {archivedOrders.map((o) => (
+                  <ArchivedOrderCard
+                    key={o.id}
+                    order={o}
+                    onUnarchive={() => unarchiveOrder(o)}
+                    onDelete={() => setDeleteTarget(o)}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
         </aside>
 
         <section className="overflow-y-auto p-6 bg-warmwhite">
-          {shippedOrders.length > 0 && (
-            <div className="mb-8 parlor-card p-4 border-2 border-gold/40">
-              <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-                <div>
-                  <h2 className="font-serif text-2xl text-navy">Online Orders</h2>
-                  <p className="text-xs text-warmgray uppercase tracking-widest">
-                    Shipped nationwide · {awaitingShipment.length} to ship · {alreadyShipped.length} shipped
-                  </p>
-                </div>
-                <span className="text-[10px] uppercase tracking-widest text-gold">
-                  Not in the print queue
-                </span>
-              </div>
-
-              {awaitingShipment.length === 0 ? (
-                <p className="text-sm text-warmgray italic">No online orders awaiting shipment.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {awaitingShipment.map((o) => (
-                    <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
-                  ))}
-                </div>
-              )}
-
-              {alreadyShipped.length > 0 && (
-                <details className="mt-4">
-                  <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
-                    Shipped ({alreadyShipped.length})
-                  </summary>
-                  <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
-                    {alreadyShipped.map((o) => (
-                      <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          )}
-
           <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
             <div>
               <h2 className="font-serif text-2xl text-navy">Print Sheet Builder</h2>
@@ -651,6 +662,47 @@ export default function Dashboard() {
             </p>
             <BatchHopper orders={activeOrders} onSheet={ordersOnSheet} onAdd={addOrderToSheet} canAdd={canAddOrder} />
           </div>
+
+          {/* Secondary section — online/shipped orders. Kept out of the market
+              workflow above and out of the wait-time estimate. */}
+          <div className="mt-10 pt-6 border-t-2 border-dashed border-bordercream">
+            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <h2 className="font-serif text-2xl text-navy">Online Orders</h2>
+                <p className="text-xs text-warmgray uppercase tracking-widest">
+                  Shipped nationwide · secondary · does not affect market wait time
+                </p>
+              </div>
+              <span className="text-[10px] uppercase tracking-widest text-gold">
+                {awaitingShipment.length} to ship · {alreadyShipped.length} shipped
+              </span>
+            </div>
+
+            {shippedOrders.length === 0 ? (
+              <p className="text-sm text-warmgray italic">No online orders yet.</p>
+            ) : awaitingShipment.length === 0 ? (
+              <p className="text-sm text-warmgray italic">No online orders awaiting shipment.</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {awaitingShipment.map((o) => (
+                  <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
+                ))}
+              </div>
+            )}
+
+            {alreadyShipped.length > 0 && (
+              <details className="mt-4">
+                <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                  Shipped ({alreadyShipped.length})
+                </summary>
+                <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
+                  {alreadyShipped.map((o) => (
+                    <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
         </section>
       </div>
 
@@ -750,11 +802,11 @@ function PaymentBadge({ order }: { order: Order }) {
 }
 
 function OrderCard({
-  order, onSheet, canAdd, onAdd, onRemove, onNotify, onPickedUp, onDelete,
+  order, onSheet, canAdd, onAdd, onRemove, onNotify, onPickedUp, onDelete, onArchive,
 }: {
   order: Order; onSheet: boolean; canAdd: boolean;
   onAdd: () => void; onRemove: () => void; onNotify: () => void; onPickedUp: () => void;
-  onDelete: () => void;
+  onDelete: () => void; onArchive: () => void;
 }) {
   const s = statusLabel(order.status);
   const borderColor =
@@ -783,9 +835,19 @@ function OrderCard({
           </span>
         </div>
       </div>
-      <p className="text-xs text-warmgray mt-1">
-        {formatDisplay(order.phone)} · {timeAgo(order.createdAt)}
-      </p>
+      <div className="flex items-center justify-between gap-2 mt-1.5">
+        <a
+          href={`sms:${order.phone}`}
+          className="inline-flex items-center gap-1.5 font-serif text-navy text-lg leading-none hover:text-gold transition select-all"
+          title="Tap to text this customer"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {formatDisplay(order.phone)}
+        </a>
+        <span className="text-xs text-warmgray shrink-0">{timeAgo(order.createdAt)}</span>
+      </div>
       <div className="grid grid-cols-3 gap-1 mt-2">
         {order.photos.slice(0, 9).map((p, i) => (
           // eslint-disable-next-line @next/next/no-img-element
@@ -818,10 +880,60 @@ function OrderCard({
           </button>
         )}
         <button
+          onClick={onArchive}
+          title="Move out of the active queue (keeps the order)"
+          className="ml-auto text-xs text-warmgray hover:text-navy underline-offset-2 hover:underline"
+        >
+          Archive
+        </button>
+        <button
           onClick={onDelete}
           disabled={onSheet}
           title={onSheet ? "Remove from print sheet first" : "Delete this order"}
-          className="ml-auto text-xs text-warmgray hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed underline-offset-2 hover:underline disabled:no-underline"
+          className="text-xs text-warmgray hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed underline-offset-2 hover:underline disabled:no-underline"
+        >
+          Delete
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function ArchivedOrderCard({
+  order, onUnarchive, onDelete,
+}: {
+  order: Order; onUnarchive: () => void; onDelete: () => void;
+}) {
+  const isShipped = order.orderType === "shipped";
+  const name = isShipped ? [order.firstName, order.lastName].filter(Boolean).join(" ") : order.firstName;
+  return (
+    <article className="parlor-card p-2.5" style={{ borderLeft: "4px solid #6B6058" }}>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-serif text-navy">{name || order.firstName}</span>
+        <span className="text-xs text-warmgray">
+          {order.package}-pack{isShipped ? " · online" : ` · ${order.magnetSize}`}
+        </span>
+      </div>
+      {order.phone && (
+        <a href={`sms:${order.phone}`} className="text-xs text-navy hover:text-gold transition select-all">
+          {formatDisplay(order.phone)}
+        </a>
+      )}
+      {order.photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-1 mt-2">
+          {order.photos.slice(0, 9).map((p, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-3 mt-2">
+        <button onClick={onUnarchive} className="btn-outline text-sm py-1 px-3">
+          Unarchive
+        </button>
+        <button
+          onClick={onDelete}
+          className="ml-auto text-xs text-warmgray hover:text-red-700 underline-offset-2 hover:underline"
         >
           Delete
         </button>
