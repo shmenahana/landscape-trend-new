@@ -5,16 +5,27 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "studio": "remotion studio",
+    "render:169": "remotion render Promo-16x9 out/groundswork-promo-16x9.mp4 --codec=h264 --crf=18",
+    "render:916": "remotion render Promo-9x16 out/groundswork-promo-9x16.mp4 --codec=h264 --crf=18",
+    "render:all": "npm run render:169 && npm run render:916"
   },
   "dependencies": {
+    "@remotion/cli": "4.0.484",
+    "@remotion/google-fonts": "4.0.484",
+    "@remotion/transitions": "4.0.484",
     "next": "13.4.12",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "remotion": "4.0.484"
   },
   "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",
-    "tailwindcss": "^3.2.4"
+    "tailwindcss": "^3.2.4",
+    "typescript": "^5.4.0"
   }
 }
