@@ -200,3 +200,10 @@ Agents: log every change here with timestamp, role, file, and what was done.
   Stripe call.
 - app/api/orders/route.ts: duplicate rules removed; backstop uses the shared fn.
 - app/shop/page.tsx: intent request body now carries name/email/address.
+
+## 2026-10-07 — Dashboard: tabbed queues left, production right
+- app/dashboard/page.tsx: left rail = MARKET / ONLINE / WEDDING tabs with live
+  active counts + gold badges ("N cash", "N to ship"); tab remembered in
+  localStorage; rail sticky + internally scrolling on lg+. Online/Wedding
+  sections removed from under the sheet. Cards unchanged (single column in
+  the rail). Right column: Print Sheet Builder, On this sheet, Batch Hopper.

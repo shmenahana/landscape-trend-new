@@ -1,3 +1,64 @@
+# Tasks: Dashboard — tabbed queues left, production right
+
+## Problem
+Left rail = market only and mostly empty; Online + Wedding orders sit ~3
+screens down, below the Print Sheet Builder. Waiting online orders get missed.
+
+## Plan (app/dashboard/page.tsx only — layout, no card/data/sheet changes)
+- [x] Left rail: tab bar MARKET / ONLINE / WEDDING, each with its live active
+      count, visible without clicking. Sticky at the top of the rail.
+  - Market count = in print queue + awaiting cash (both need the operator);
+    a gold "N cash" badge shows when anyone is waiting to pay at the table,
+    so a waiting customer is visible from the other tabs too
+  - Online count = to-ship, shown as a gold badge (the to-ship surfacing)
+  - Wedding count = not picked up
+- [x] Market tab: Awaiting Cash, queue cards, Picked Up + Archived (collapsed)
+      — exactly today's rail content
+- [x] Online tab: unshipped first, then Shipped (collapsed); same
+      ShippedOrderCard, single column to fit the rail
+- [x] Wedding tab: active, then Picked Up (collapsed), Event Settings link;
+      same WeddingOrderCard
+- [x] Remove the Online + Wedding sections below the sheet (no duplicates)
+- [x] Refresh button moves to the tab bar (available on every tab)
+- [x] Tab persisted in localStorage (read after mount, try/catch)
+- [x] Sticky rail on lg+: page scrolls, rail is `sticky top-0 h-screen` and
+      scrolls internally. Below lg: rail stacks above the sheet, full width.
+
+## Must NOT change
+Card components, print sheet output, pricing, crop, /shop, order data/API.
+
+## Verify
+- [x] build
+- [x] Seeded orders of every kind → each tab shows the right cards + counts
+- [x] Add to Sheet from Market and Online tabs fills the sheet
+- [x] Download → 2550x3300 PNG
+- [x] Reload keeps the tab
+- [x] Rail stays in view while the sheet scrolls; narrow width usable
+- [x] No Online/Wedding sections left under the sheet
+
+## Deploy
+- [x] deploy.py → DEPLOY SUCCESS; .env 12 keys, DASHBOARD_PASSWORD not rotated,
+      uploads 138, pm2 both online. Live dashboard (read-only check): tabs
+      "MARKET 0", "ONLINE 2 · 2 TO SHIP", "WEDDING 0" match /api/orders exactly;
+      no old sections under the sheet; zero page errors.
+
+## Results (Playwright vs local `next start`, 9 seeded orders of every type)
+- Tabs: "MARKET 3 · 1 CASH", "ONLINE 2 · 2 TO SHIP", "WEDDING 1" — correct
+  (market = 2 queued + 1 awaiting cash; online = 2 unshipped; wedding = 1).
+- Market: cash section, queue cards, Picked Up (1) + Archived (1) collapsed.
+  Online: SeedShipA, SeedShipB first, Shipped (1) collapsed; no market items.
+  Wedding: active card, Picked Up (1), Event Settings link.
+- No "Online Orders" / "Wedding Orders" sections left under the sheet.
+- Add to Sheet from Market and Online → both on the sheet + "On this sheet".
+- Download → 2550x3300 PNG. NOTE: the PNG carries no DPI metadata (no pHYs
+  chunk) — canvas export never writes it; pre-existing, sheet code untouched.
+- Sticky: page scrolled 738px → rail still at top 0, full height, tabs visible.
+- Reload keeps the tab (Wedding → Wedding; Online → Online).
+- 390px: tabs 117px each, no horizontal overflow, rail stacks above the sheet.
+- Zero console/page errors. Seed rows deleted.
+
+---
+
 # Tasks: Validate shipping address BEFORE the Stripe PaymentIntent
 
 ## Problem

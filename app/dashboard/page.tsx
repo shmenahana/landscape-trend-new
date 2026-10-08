@@ -9,6 +9,8 @@ import { CroppedImage, type CropArea } from "../CroppedImage";
 import { downloadPrintSheet, type PrintCell } from "@/lib/printSheetImage";
 
 type MagnetSize = "2x2" | "2x3";
+type QueueTab = "market" | "online" | "wedding";
+const QUEUE_TAB_KEY = "dashboard.queueTab";
 
 type ShippingAddress = { street: string; city: string; state: string; zip: string };
 
@@ -153,6 +155,19 @@ export default function Dashboard() {
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
   const [downloadingSheet, setDownloadingSheet] = useState(false);
   const knownIdsRef = useRef<Set<string> | null>(null);
+  // Which queue the left rail shows. Remembered across reloads — the operator
+  // refreshes constantly at a market and shouldn't get bounced to another tab.
+  const [queueTab, setQueueTab] = useState<QueueTab>("market");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(QUEUE_TAB_KEY);
+      if (saved === "market" || saved === "online" || saved === "wedding") setQueueTab(saved);
+    } catch {}
+  }, []);
+  function selectQueueTab(t: QueueTab) {
+    setQueueTab(t);
+    try { localStorage.setItem(QUEUE_TAB_KEY, t); } catch {}
+  }
 
   async function refresh() {
     try {
@@ -533,109 +548,244 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[420px_1fr] min-h-0">
-        <aside className="border-r border-bordercream bg-cream overflow-y-auto p-4 space-y-3">
-          {cashPendingOrders.length > 0 && (
-            <section className="rounded-md border-2 border-gold bg-gold/5 p-3 mb-2">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-serif text-base text-navy">Awaiting Cash Payment</h2>
-                <span className="text-[10px] uppercase tracking-widest text-gold">
-                  {cashPendingOrders.length}
-                </span>
-              </div>
-              <p className="text-xs text-warmgray uppercase tracking-widest mb-3">
-                Match the code shown on the customer&apos;s phone, then confirm.
-              </p>
-              <div className="space-y-2">
-                {cashPendingOrders.map((o) => (
-                  <CashPendingCard
-                    key={o.id}
-                    order={o}
-                    onConfirm={() => confirmCashPayment(o)}
-                    onDelete={() => setDeleteTarget(o)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-serif text-lg text-navy">Market Queue</h2>
-              <p className="text-[10px] text-warmgray uppercase tracking-widest">
-                In-person orders · {activeOrders.length} active
-              </p>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[420px_1fr] lg:items-start">
+        {/* Queues on the left, production on the right. On wide screens the
+            rail stays in view while the sheet scrolls, scrolling internally. */}
+        <aside className="border-b lg:border-b-0 lg:border-r border-bordercream bg-cream lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-cream border-b border-bordercream px-4 pt-3 pb-2">
+            <div role="tablist" aria-label="Order queues" className="grid grid-cols-3 gap-1">
+              <QueueTabButton
+                label="Market"
+                count={activeOrders.length + cashPendingOrders.length}
+                active={queueTab === "market"}
+                onClick={() => selectQueueTab("market")}
+                alert={cashPendingOrders.length > 0 ? `${cashPendingOrders.length} cash` : undefined}
+              />
+              <QueueTabButton
+                label="Online"
+                count={awaitingShipment.length}
+                active={queueTab === "online"}
+                onClick={() => selectQueueTab("online")}
+                alert={awaitingShipment.length > 0 ? `${awaitingShipment.length} to ship` : undefined}
+              />
+              <QueueTabButton
+                label="Wedding"
+                count={activeWeddingOrders.length}
+                active={queueTab === "wedding"}
+                onClick={() => selectQueueTab("wedding")}
+              />
             </div>
-            <button onClick={refresh} className="text-xs text-gold uppercase tracking-widest">
-              Refresh
-            </button>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[10px] text-warmgray uppercase tracking-widest">
+                {queueTab === "market" && <>In-person orders · {activeOrders.length} active</>}
+                {queueTab === "online" && <>Shipped nationwide · {awaitingShipment.length} to ship · {alreadyShipped.length} shipped</>}
+                {queueTab === "wedding" && <>Event guests · {activeWeddingOrders.length} active</>}
+              </p>
+              <button onClick={refresh} className="text-xs text-gold uppercase tracking-widest">
+                Refresh
+              </button>
+            </div>
           </div>
-          {activeOrders.length === 0 && !loading && (
-            <p className="text-sm text-warmgray italic mt-6 text-center">
-              No active market orders yet.
-            </p>
-          )}
-          {activeOrders.map((o) => (
-            <OrderCard
-              key={o.id}
-              order={o}
-              onSheet={ordersOnSheet.has(o.id)}
-              canAdd={canAddOrder(o)}
-              onAdd={() => addOrderToSheet(o)}
-              onRemove={() => removeOrderFromSheet(o.id)}
-              onNotify={() => notifyReady(o)}
-              onPickedUp={() => markPickedUp(o)}
-              onDelete={() => setDeleteTarget(o)}
-              onArchive={() => archiveOrder(o)}
-            />
-          ))}
-          {completedOrders.length > 0 && (
-            <details className="mt-6">
-              <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
-                Picked Up ({completedOrders.length})
-              </summary>
-              <div className="mt-2 space-y-2 opacity-80">
-                {completedOrders.map((o) => (
-                  <div key={o.id} className="parlor-card p-2 text-sm flex items-center justify-between">
-                    <div>
-                      <span className="font-serif text-navy">{o.firstName}</span>{" "}
-                      <span className="text-warmgray">· {o.package}-pack</span>
-                    </div>
-                    <button
-                      onClick={() => setDeleteTarget(o)}
-                      className="text-xs text-warmgray hover:text-red-700 underline-offset-2 hover:underline"
-                    >
-                      Delete
-                    </button>
+
+          <div className="p-4 space-y-3">
+          {queueTab === "market" && (
+            <>
+              {cashPendingOrders.length > 0 && (
+                <section className="rounded-md border-2 border-gold bg-gold/5 p-3 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="font-serif text-base text-navy">Awaiting Cash Payment</h2>
+                    <span className="text-[10px] uppercase tracking-widest text-gold">
+                      {cashPendingOrders.length}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </details>
+                  <p className="text-xs text-warmgray uppercase tracking-widest mb-3">
+                    Match the code shown on the customer&apos;s phone, then confirm.
+                  </p>
+                  <div className="space-y-2">
+                    {cashPendingOrders.map((o) => (
+                      <CashPendingCard
+                        key={o.id}
+                        order={o}
+                        onConfirm={() => confirmCashPayment(o)}
+                        onDelete={() => setDeleteTarget(o)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {activeOrders.length === 0 && !loading && (
+                <p className="text-sm text-warmgray italic mt-6 text-center">
+                  No active market orders yet.
+                </p>
+              )}
+              {activeOrders.map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  onSheet={ordersOnSheet.has(o.id)}
+                  canAdd={canAddOrder(o)}
+                  onAdd={() => addOrderToSheet(o)}
+                  onRemove={() => removeOrderFromSheet(o.id)}
+                  onNotify={() => notifyReady(o)}
+                  onPickedUp={() => markPickedUp(o)}
+                  onDelete={() => setDeleteTarget(o)}
+                  onArchive={() => archiveOrder(o)}
+                />
+              ))}
+              {completedOrders.length > 0 && (
+                <details className="mt-6">
+                  <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                    Picked Up ({completedOrders.length})
+                  </summary>
+                  <div className="mt-2 space-y-2 opacity-80">
+                    {completedOrders.map((o) => (
+                      <div key={o.id} className="parlor-card p-2 text-sm flex items-center justify-between">
+                        <div>
+                          <span className="font-serif text-navy">{o.firstName}</span>{" "}
+                          <span className="text-warmgray">· {o.package}-pack</span>
+                        </div>
+                        <button
+                          onClick={() => setDeleteTarget(o)}
+                          className="text-xs text-warmgray hover:text-red-700 underline-offset-2 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {archivedOrders.length > 0 && (
+                <details className="mt-4">
+                  <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                    Archived ({archivedOrders.length})
+                  </summary>
+                  <p className="text-[10px] text-warmgray mt-2 mb-2 leading-snug">
+                    Held out of the active queue and the wait estimate. Unarchive to bring back.
+                  </p>
+                  <div className="space-y-2 opacity-90">
+                    {archivedOrders.map((o) => (
+                      <ArchivedOrderCard
+                        key={o.id}
+                        order={o}
+                        onUnarchive={() => unarchiveOrder(o)}
+                        onDelete={() => setDeleteTarget(o)}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
           )}
 
-          {archivedOrders.length > 0 && (
-            <details className="mt-4">
-              <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
-                Archived ({archivedOrders.length})
-              </summary>
-              <p className="text-[10px] text-warmgray mt-2 mb-2 leading-snug">
-                Held out of the active queue and the wait estimate. Unarchive to bring back.
-              </p>
-              <div className="space-y-2 opacity-90">
-                {archivedOrders.map((o) => (
-                  <ArchivedOrderCard
-                    key={o.id}
-                    order={o}
-                    onUnarchive={() => unarchiveOrder(o)}
-                    onDelete={() => setDeleteTarget(o)}
-                  />
-                ))}
-              </div>
-            </details>
+          {queueTab === "online" && (
+            <>
+              {shippedOrders.length === 0 ? (
+                <p className="text-sm text-warmgray italic">No online orders yet.</p>
+              ) : awaitingShipment.length === 0 ? (
+                <p className="text-sm text-warmgray italic">No online orders awaiting shipment.</p>
+              ) : (
+                <div className="space-y-3">
+                  {awaitingShipment.map((o) => (
+                    <ShippedOrderCard
+                      key={o.id}
+                      order={o}
+                      onSheet={ordersOnSheet.has(o.id)}
+                      canAdd={canAddOrder(o)}
+                      onAdd={() => addOrderToSheet(o)}
+                      onRemove={() => removeOrderFromSheet(o.id)}
+                      onShip={markShipped}
+                      onDelete={() => setDeleteTarget(o)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {alreadyShipped.length > 0 && (
+                <details className="mt-4">
+                  <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                    Shipped ({alreadyShipped.length})
+                  </summary>
+                  <div className="space-y-3 mt-3 opacity-90">
+                    {alreadyShipped.map((o) => (
+                      <ShippedOrderCard
+                        key={o.id}
+                        order={o}
+                        onSheet={ordersOnSheet.has(o.id)}
+                        canAdd={canAddOrder(o)}
+                        onAdd={() => addOrderToSheet(o)}
+                        onRemove={() => removeOrderFromSheet(o.id)}
+                        onShip={markShipped}
+                        onDelete={() => setDeleteTarget(o)}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
           )}
+
+          {queueTab === "wedding" && (
+            <>
+              <div className="flex justify-end">
+                <Link href="/dashboard/wedding" className="text-[10px] uppercase tracking-widest text-gold hover:text-navy">
+                  Event Settings →
+                </Link>
+              </div>
+              {weddingOrders.length === 0 ? (
+                <p className="text-sm text-warmgray italic">
+                  No wedding orders yet. Turn on wedding mode in Event Settings to open the guest page.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {activeWeddingOrders.map((o) => (
+                    <WeddingOrderCard
+                      key={o.id}
+                      order={o}
+                      onSheet={ordersOnSheet.has(o.id)}
+                      canAdd={canAddOrder(o)}
+                      onAdd={() => addOrderToSheet(o)}
+                      onRemove={() => removeOrderFromSheet(o.id)}
+                      onReady={() => markReady(o)}
+                      onPickedUp={() => markPickedUp(o)}
+                      onArchive={() => archiveOrder(o)}
+                      onDelete={() => setDeleteTarget(o)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {doneWeddingOrders.length > 0 && (
+                <details className="mt-4">
+                  <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                    Picked Up ({doneWeddingOrders.length})
+                  </summary>
+                  <div className="space-y-3 mt-3 opacity-90">
+                    {doneWeddingOrders.map((o) => (
+                      <WeddingOrderCard
+                        key={o.id}
+                        order={o}
+                        onSheet={ordersOnSheet.has(o.id)}
+                        canAdd={canAddOrder(o)}
+                        onAdd={() => addOrderToSheet(o)}
+                        onRemove={() => removeOrderFromSheet(o.id)}
+                        onReady={() => markReady(o)}
+                        onPickedUp={() => markPickedUp(o)}
+                        onArchive={() => archiveOrder(o)}
+                        onDelete={() => setDeleteTarget(o)}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
+          )}
+          </div>
         </aside>
 
-        <section className="overflow-y-auto p-6 bg-warmwhite">
+        <section className="p-6 bg-warmwhite min-w-0">
           <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
             <div>
               <h2 className="font-serif text-2xl text-navy">Print Sheet Builder</h2>
@@ -756,127 +906,6 @@ export default function Dashboard() {
             <BatchHopper orders={activeOrders} onSheet={ordersOnSheet} onAdd={addOrderToSheet} canAdd={canAddOrder} />
           </div>
 
-          {/* Secondary section — online/shipped orders. Kept out of the market
-              workflow above and out of the wait-time estimate. */}
-          <div className="mt-10 pt-6 border-t-2 border-dashed border-bordercream">
-            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-              <div>
-                <h2 className="font-serif text-2xl text-navy">Online Orders</h2>
-                <p className="text-xs text-warmgray uppercase tracking-widest">
-                  Shipped nationwide · secondary · does not affect market wait time
-                </p>
-              </div>
-              <span className="text-[10px] uppercase tracking-widest text-gold">
-                {awaitingShipment.length} to ship · {alreadyShipped.length} shipped
-              </span>
-            </div>
-
-            {shippedOrders.length === 0 ? (
-              <p className="text-sm text-warmgray italic">No online orders yet.</p>
-            ) : awaitingShipment.length === 0 ? (
-              <p className="text-sm text-warmgray italic">No online orders awaiting shipment.</p>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {awaitingShipment.map((o) => (
-                  <ShippedOrderCard
-                    key={o.id}
-                    order={o}
-                    onSheet={ordersOnSheet.has(o.id)}
-                    canAdd={canAddOrder(o)}
-                    onAdd={() => addOrderToSheet(o)}
-                    onRemove={() => removeOrderFromSheet(o.id)}
-                    onShip={markShipped}
-                    onDelete={() => setDeleteTarget(o)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {alreadyShipped.length > 0 && (
-              <details className="mt-4">
-                <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
-                  Shipped ({alreadyShipped.length})
-                </summary>
-                <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
-                  {alreadyShipped.map((o) => (
-                    <ShippedOrderCard
-                      key={o.id}
-                      order={o}
-                      onSheet={ordersOnSheet.has(o.id)}
-                      canAdd={canAddOrder(o)}
-                      onAdd={() => addOrderToSheet(o)}
-                      onRemove={() => removeOrderFromSheet(o.id)}
-                      onShip={markShipped}
-                      onDelete={() => setDeleteTarget(o)}
-                    />
-                  ))}
-                </div>
-              </details>
-            )}
-          </div>
-
-          {/* Wedding orders — guests at an active wedding event. Prepaid by the
-              couple, no phone/SMS, and kept out of the market wait estimate. */}
-          <div className="mt-10 pt-6 border-t-2 border-dashed border-bordercream">
-            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-              <div>
-                <h2 className="font-serif text-2xl text-navy">Wedding Orders</h2>
-                <p className="text-xs text-warmgray uppercase tracking-widest">
-                  Event guests · does not affect market wait time
-                </p>
-              </div>
-              <Link href="/dashboard/wedding" className="text-[10px] uppercase tracking-widest text-gold hover:text-navy">
-                Event Settings →
-              </Link>
-            </div>
-
-            {weddingOrders.length === 0 ? (
-              <p className="text-sm text-warmgray italic">
-                No wedding orders yet. Turn on wedding mode in Event Settings to open the guest page.
-              </p>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {activeWeddingOrders.map((o) => (
-                  <WeddingOrderCard
-                    key={o.id}
-                    order={o}
-                    onSheet={ordersOnSheet.has(o.id)}
-                    canAdd={canAddOrder(o)}
-                    onAdd={() => addOrderToSheet(o)}
-                    onRemove={() => removeOrderFromSheet(o.id)}
-                    onReady={() => markReady(o)}
-                    onPickedUp={() => markPickedUp(o)}
-                    onArchive={() => archiveOrder(o)}
-                    onDelete={() => setDeleteTarget(o)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {doneWeddingOrders.length > 0 && (
-              <details className="mt-4">
-                <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
-                  Picked Up ({doneWeddingOrders.length})
-                </summary>
-                <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
-                  {doneWeddingOrders.map((o) => (
-                    <WeddingOrderCard
-                      key={o.id}
-                      order={o}
-                      onSheet={ordersOnSheet.has(o.id)}
-                      canAdd={canAddOrder(o)}
-                      onAdd={() => addOrderToSheet(o)}
-                      onRemove={() => removeOrderFromSheet(o.id)}
-                      onReady={() => markReady(o)}
-                      onPickedUp={() => markPickedUp(o)}
-                      onArchive={() => archiveOrder(o)}
-                      onDelete={() => setDeleteTarget(o)}
-                    />
-                  ))}
-                </div>
-              </details>
-            )}
-          </div>
         </section>
       </div>
 
@@ -913,6 +942,40 @@ export default function Dashboard() {
         />
       )}
     </main>
+  );
+}
+
+// One queue tab: name + live active count, plus an optional gold alert badge
+// (cash waiting at the table, online orders to ship) so urgent work is visible
+// from any tab.
+function QueueTabButton({
+  label, count, active, onClick, alert,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+  alert?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`rounded px-2 py-1.5 text-center transition border ${
+        active ? "bg-navy text-warmwhite border-navy" : "bg-warmwhite text-navy border-bordercream hover:border-navy"
+      }`}
+    >
+      <span className="block text-[11px] uppercase tracking-widest">
+        {label} <span className="font-semibold">{count}</span>
+      </span>
+      {alert && (
+        <span className="mt-1 inline-block rounded-full bg-gold text-warmwhite text-[10px] uppercase tracking-wider px-2 py-0.5">
+          {alert}
+        </span>
+      )}
+    </button>
   );
 }
 
