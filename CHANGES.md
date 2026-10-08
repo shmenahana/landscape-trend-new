@@ -184,3 +184,11 @@ Agents: log every change here with timestamp, role, file, and what was done.
   upload reject when no 2:3 crop ≥ 720 wide fits), no Fit mode.
 - app/order + app/shop: isTooSmallToPrint(picked, square).
 - .gitignore: *.tsbuildinfo. tasks/lessons.md: crop-default lesson.
+
+## 2026-10-07 — /shop: prices up front, address last
+- app/shop/page.tsx: landing shows 3/9-magnet prices + flat shipping from
+  lib/pricing (removed $12/$25/6.99 literals). Steps now package → photos →
+  review → shipping details → payment. Review no longer shows name/address;
+  payment card shows "Ships to …". Validation unchanged, now gates payment.
+- Untouched: /order, /wedding, CropStep, lib/cropImage.ts, /api/orders,
+  create-payment-intent.

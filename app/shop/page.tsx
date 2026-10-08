@@ -6,11 +6,11 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { getSourceImg } from "@/lib/cropImage";
 import { CropStep, isTooSmallToPrint, type PickedImage } from "../CropStep";
-import { priceDollars, type PackageKey } from "@/lib/pricing";
+import { SHIPPING_CENTS, priceDollars, type PackageKey } from "@/lib/pricing";
 
 type Stage = "landing" | "details" | "package" | "photos" | "cropping" | "review" | "payment" | "confirm";
 
-const SHIPPING = 6.99;
+const SHIPPING = SHIPPING_CENTS / 100;
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
@@ -35,7 +35,7 @@ function money(n: number): string {
 export default function ShopPage() {
   const [stage, setStage] = useState<Stage>("landing");
 
-  // Step 1 — customer details
+  // Step 4 — customer details + shipping address (asked last, before payment)
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,10 +45,10 @@ export default function ShopPage() {
   const [stateCode, setStateCode] = useState("");
   const [zip, setZip] = useState("");
 
-  // Step 2 — package
+  // Step 1 — package
   const [pkg, setPkg] = useState<PackageKey>("3");
 
-  // Step 3 — photos
+  // Step 2 — photos
   const [photos, setPhotos] = useState<Blob[]>([]);
   const [thumbs, setThumbs] = useState<string[]>([]);
   // Uncropped copy of each photo (index-aligned with `photos`), uploaded so a
@@ -69,7 +69,7 @@ export default function ShopPage() {
   // Square magnets get Fill/Fit + the 720px floor; 2x3 keeps the plain cropper.
   const square = true;
 
-  const goToPackage = () => {
+  const goToPayment = () => {
     if (!firstName.trim()) return setError("Please enter your first name.");
     if (!lastName.trim()) return setError("Please enter your last name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Please enter a valid email address.");
@@ -78,7 +78,7 @@ export default function ShopPage() {
     if (!stateCode) return setError("Please select your state.");
     if (!/^\d{5}(-\d{4})?$/.test(zip.trim())) return setError("Please enter a valid ZIP code.");
     setError(null);
-    setStage("package");
+    setStage("payment");
   };
 
   const goToPhotos = () => {
@@ -189,64 +189,15 @@ export default function ShopPage() {
     <main className="min-h-screen flex flex-col">
       <div className="awning" />
       <div className="flex-1 flex flex-col items-center px-5 py-8 max-w-md w-full mx-auto">
-        {stage === "landing" && <Landing onStart={() => { setError(null); setStage("details"); }} />}
-
-        {stage === "details" && (
-          <section className="w-full">
-            <Header subtitle="Step 1 of 5 · Your Details" />
-            <div className="parlor-card p-6 mt-6 space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">First Name</label>
-                  <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Eleanor" autoComplete="given-name" />
-                </div>
-                <div>
-                  <label className="label">Last Name</label>
-                  <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Hart" autoComplete="family-name" />
-                </div>
-              </div>
-              <div>
-                <label className="label">Email Address</label>
-                <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" inputMode="email" />
-              </div>
-              <div>
-                <label className="label">Phone Number <span className="normal-case tracking-normal text-warmgray">(optional)</span></label>
-                <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 123-4567" inputMode="tel" autoComplete="tel" />
-              </div>
-              <div>
-                <label className="label">Street Address</label>
-                <input className="input" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="123 Main St" autoComplete="address-line1" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">City</label>
-                  <input className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cleveland" autoComplete="address-level2" />
-                </div>
-                <div>
-                  <label className="label">State</label>
-                  <select className="input" value={stateCode} onChange={(e) => setStateCode(e.target.value)} autoComplete="address-level1">
-                    <option value="" disabled>Select…</option>
-                    {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="label">ZIP Code</label>
-                <input className="input" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="44101" inputMode="numeric" autoComplete="postal-code" />
-              </div>
-              {error && <p className="text-sm text-red-700">{error}</p>}
-              <button className="btn-primary w-full" onClick={goToPackage}>Continue →</button>
-            </div>
-          </section>
-        )}
+        {stage === "landing" && <Landing onStart={() => { setError(null); setStage("package"); }} />}
 
         {stage === "package" && (
           <section className="w-full">
-            <Header subtitle="Step 2 of 5 · Choose Your Package" />
+            <Header subtitle="Step 1 of 5 · Choose Your Package" />
             <div className="parlor-card p-6 mt-6 space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <PackageOption active={pkg === "3"} onClick={() => setPkg("3")} count={3} price={12} />
-                <PackageOption active={pkg === "9"} onClick={() => setPkg("9")} count={9} price={25} />
+                <PackageOption active={pkg === "3"} onClick={() => setPkg("3")} count={3} price={priceDollars("3")} />
+                <PackageOption active={pkg === "9"} onClick={() => setPkg("9")} count={9} price={priceDollars("9")} />
               </div>
               <div className="border-t border-bordercream pt-4 space-y-2 text-sm">
                 <div className="flex justify-between text-charcoal">
@@ -264,14 +215,13 @@ export default function ShopPage() {
               </div>
               {error && <p className="text-sm text-red-700">{error}</p>}
               <button className="btn-primary w-full" onClick={goToPhotos}>Continue →</button>
-              <button className="text-sm text-warmgray underline w-full" onClick={() => setStage("details")}>← Back to details</button>
             </div>
           </section>
         )}
 
         {stage === "photos" && (
           <section className="w-full">
-            <Header subtitle="Step 3 of 5 · Your Photos" />
+            <Header subtitle="Step 2 of 5 · Your Photos" />
             <div className="parlor-card p-6 mt-6 space-y-4">
               <div className="flex items-baseline justify-between">
                 <p className="font-serif text-navy text-lg">{photos.length} of {maxPhotos} photos uploaded</p>
@@ -321,7 +271,7 @@ export default function ShopPage() {
 
         {stage === "review" && (
           <section className="w-full">
-            <Header subtitle="Step 4 of 5 · Review Your Order" />
+            <Header subtitle="Step 3 of 5 · Review Your Order" />
             <div className="parlor-card p-6 mt-6 space-y-5">
               <div>
                 <p className="label">Your Magnets</p>
@@ -335,33 +285,9 @@ export default function ShopPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="label">Name</p>
-                  <p className="text-charcoal">{firstName} {lastName}</p>
-                </div>
-                <div>
-                  <p className="label">Email</p>
-                  <p className="text-charcoal break-words">{email}</p>
-                </div>
-                {phone.trim() && (
-                  <div>
-                    <p className="label">Phone</p>
-                    <p className="text-charcoal">{prettyPhone}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="label">Package</p>
-                  <p className="text-charcoal">{pkg === "9" ? "9 Magnets" : "3 Magnets"}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="label">Ship To</p>
-                <p className="text-charcoal text-sm leading-snug">
-                  {street}<br />
-                  {city}, {stateCode} {zip}
-                </p>
+              <div className="text-sm">
+                <p className="label">Package</p>
+                <p className="text-charcoal">{pkg === "9" ? "9 Magnets" : "3 Magnets"}</p>
               </div>
 
               <div className="border-t border-bordercream pt-4 space-y-2 text-sm">
@@ -375,11 +301,58 @@ export default function ShopPage() {
 
               {error && <p className="text-sm text-red-700">{error}</p>}
 
-              <button className="btn-primary w-full" onClick={() => { setError(null); setStage("payment"); }}>Continue to Payment →</button>
-              <div className="grid grid-cols-2 gap-2">
-                <button className="btn-outline" onClick={() => setStage("details")}>Edit Details</button>
-                <button className="btn-outline" onClick={() => setStage("photos")}>Edit Photos</button>
+              <button className="btn-primary w-full" onClick={() => { setError(null); setStage("details"); }}>Continue to Shipping →</button>
+              <button className="btn-outline w-full" onClick={() => setStage("photos")}>Edit Photos</button>
+            </div>
+          </section>
+        )}
+
+        {stage === "details" && (
+          <section className="w-full">
+            <Header subtitle="Step 4 of 5 · Shipping Details" />
+            <div className="parlor-card p-6 mt-6 space-y-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">First Name</label>
+                  <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Eleanor" autoComplete="given-name" />
+                </div>
+                <div>
+                  <label className="label">Last Name</label>
+                  <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Hart" autoComplete="family-name" />
+                </div>
               </div>
+              <div>
+                <label className="label">Email Address</label>
+                <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" inputMode="email" />
+              </div>
+              <div>
+                <label className="label">Phone Number <span className="normal-case tracking-normal text-warmgray">(optional)</span></label>
+                <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 123-4567" inputMode="tel" autoComplete="tel" />
+              </div>
+              <div>
+                <label className="label">Street Address</label>
+                <input className="input" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="123 Main St" autoComplete="address-line1" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">City</label>
+                  <input className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cleveland" autoComplete="address-level2" />
+                </div>
+                <div>
+                  <label className="label">State</label>
+                  <select className="input" value={stateCode} onChange={(e) => setStateCode(e.target.value)} autoComplete="address-level1">
+                    <option value="" disabled>Select…</option>
+                    {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">ZIP Code</label>
+                <input className="input" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="44101" inputMode="numeric" autoComplete="postal-code" />
+              </div>
+              {error && <p className="text-sm text-red-700">{error}</p>}
+              <button className="btn-primary w-full" onClick={goToPayment}>Continue to Payment →</button>
+              <button className="text-sm text-warmgray underline w-full" onClick={() => { setError(null); setStage("review"); }}>← Back to review</button>
             </div>
           </section>
         )}
@@ -392,6 +365,9 @@ export default function ShopPage() {
                 <p className="text-xs text-warmgray uppercase tracking-widest">Total (incl. shipping)</p>
                 <p className="font-serif text-gold text-4xl leading-none mt-1">${money(totalDollars)}</p>
                 <p className="text-xs text-warmgray mt-1">{pkg === "9" ? "9 Magnets" : "3 Magnets"} · ${money(SHIPPING)} shipping</p>
+                <p className="text-xs text-charcoal mt-3 leading-snug">
+                  Ships to {firstName} {lastName}, {street}, {city}, {stateCode} {zip}
+                </p>
               </div>
 
               <ShippedPayment
@@ -407,7 +383,7 @@ export default function ShopPage() {
 
               {error && <p className="text-sm text-red-700">{error}</p>}
 
-              <button className="text-sm text-warmgray underline w-full" onClick={() => setStage("review")} disabled={submitting}>← Back to review</button>
+              <button className="text-sm text-warmgray underline w-full" onClick={() => setStage("details")} disabled={submitting}>← Back to shipping details</button>
             </div>
           </section>
         )}
@@ -437,25 +413,26 @@ export default function ShopPage() {
 }
 
 function Landing({ onStart }: { onStart: () => void }) {
+  // Cold visitors (store QR code) see the price before anything else.
   return (
     <section className="w-full text-center mt-8">
       <p className="font-script text-gold text-4xl">The</p>
       <h1 className="font-serif text-5xl text-navy leading-tight tracking-wide">Magnet Parlor</h1>
       <div className="heart-divider my-6"><span>♥</span></div>
-      <p className="font-serif italic text-warmgray text-lg">Order online — we ship nationwide.</p>
+      <p className="font-serif italic text-warmgray text-lg">Your photos on magnets, shipped to your door.</p>
 
-      <div className="parlor-card p-6 mt-10 text-left">
-        <p className="font-serif text-navy text-xl mb-2">How it works</p>
-        <ol className="space-y-2 text-warmgray text-sm">
-          <li>1. Tell us where to ship your magnets.</li>
-          <li>2. Pick your package — 3 or 9 magnets.</li>
-          <li>3. Upload your favorite photos and crop them.</li>
-          <li>4. Pay securely by card. We&apos;ll email tracking when it ships.</li>
-        </ol>
-        <p className="text-xs text-warmgray mt-4">Flat $6.99 shipping anywhere in the US.</p>
+      <div className="grid grid-cols-2 gap-3 mt-8">
+        {(["3", "9"] as const).map((k) => (
+          <div key={k} className="parlor-card p-5">
+            <div className="font-serif text-navy text-3xl leading-none">{k}</div>
+            <div className="text-xs text-warmgray uppercase tracking-widest mt-1">Magnets</div>
+            <div className="font-serif text-gold text-2xl mt-3">${priceDollars(k)}</div>
+          </div>
+        ))}
       </div>
+      <p className="text-sm text-warmgray mt-4">Flat ${money(SHIPPING)} shipping anywhere in the US.</p>
 
-      <button className="btn-primary mt-10 w-full text-lg" onClick={onStart}>Start Your Order</button>
+      <button className="btn-primary mt-8 w-full text-lg" onClick={onStart}>Start Your Order</button>
     </section>
   );
 }
@@ -470,7 +447,7 @@ function Header({ subtitle }: { subtitle: string }) {
   );
 }
 
-function PackageOption({ active, onClick, count, price }: { active: boolean; onClick: () => void; count: number; price: number }) {
+function PackageOption({ active, onClick, count, price }: { active: boolean; onClick: () => void; count: number; price: string }) {
   return (
     <button
       type="button"

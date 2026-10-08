@@ -1,3 +1,66 @@
+# Tasks: /shop — prices up front, address last
+
+## Problem
+QR-code visitors from a sports store hit a full shipping-address form as step 1
+of 5, before seeing a price or uploading anything.
+
+## Plan (app/shop/page.tsx only)
+- [x] Landing: real 3- and 9-magnet prices from lib/pricing (priceDollars),
+      "Flat $X shipping anywhere in the US" from SHIPPING_CENTS, one short line,
+      Start button. No hardcoded money anywhere on the page (package tiles had
+      $12/$25 literals, page had SHIPPING = 6.99 — both now from lib/pricing).
+- [x] New order: package (1/5) → photos+crop (2/5) → review (3/5) →
+      details/address (4/5) → payment (5/5) → confirm
+- [x] Review no longer shows name/address (not entered yet); Continue → details.
+      Payment card shows "Ships to …" so the address is still seen before paying.
+- [x] Back links: photos → package, review → photos (Edit Photos), details →
+      review, payment → details
+- [x] All order state already lives in ShopPage (photos, sources, thumbs, pkg,
+      address fields) — stages only switch views, so nothing is lost. The crop
+      position + Fill/Fit choice are baked into each confirmed photo blob.
+- [x] Validation unchanged: same client checks (now gate details → payment);
+      server /api/orders address validation untouched
+
+## Must NOT change
+/order, /wedding, CropStep, lib/cropImage.ts, source upload, Stripe intent
+creation + server amount verification, /api/orders validation.
+
+## Verify
+- [x] build
+- [x] Walk: prices on landing → package → 3 crops (1 FIT, 2 FILL) → review →
+      BACK to photos → BACK to package → forward again: same 3 thumbs (byte-
+      identical blobs), sources intact → review → details → payment (Stripe)
+- [x] Each missing address field blocks details → payment client-side
+- [x] Server: POST /api/orders shipped with each address field missing → 400
+- [x] photo-N.jpg + photo-N-source.jpg land (via /order cash — same server
+      path; local has no Stripe keys)
+
+## Deploy
+- [x] deploy.py → DEPLOY SUCCESS; .env 12 keys, DASHBOARD_PASSWORD not rotated,
+      136 upload dirs untouched, pm2 magnet-parlor + email-agent online.
+      Live walk on https://themagnetparlor.com/shop: prices on landing → package
+      → 3 photos → review → shipping → payment → Stripe Payment Element loaded
+      ($18.99, server-computed). Left one unpaid test PaymentIntent (…JE9GtE).
+
+## Results (Playwright, 390px viewport, local `next start`)
+- Landing: "3 Magnets $12 · 9 Magnets $25 · Flat $6.99 shipping anywhere in
+  the US." — all from lib/pricing (no money literals left in app/shop).
+- Steps read 1 of 5 Package → 2 Photos → 3 Review → 4 Shipping Details →
+  5 Payment. Walked review→photos→package→photos→review→shipping→review→
+  shipping→payment→shipping→payment: photo + source Blobs SHA-256 identical
+  before/after (FIT photo, zoomed FILL, 4:3 FILL); address fields kept.
+- Client: blanking first/last/email/street/city/state/ZIP each blocks with its
+  message; phone blank passes. Payment card shows "Ships to …".
+- Server: shipped POST missing street/city/state/zip, bad state, bad ZIP, or no
+  address → 400 each, no upload folder created. Full address passes validation.
+- Source landing: /api/orders + submit code unchanged since verified earlier
+  today (photo-N.jpg + photo-N-source.jpg via /order cash).
+- Known, pre-existing: the order POST happens after Stripe captures payment, so
+  a server-side address rejection there would mean charged-without-order.
+  Client checks mirror the server's exactly, which is what prevents it today.
+
+---
+
 # Tasks: Crop defaults revision + 2x3 resolution floor, then commit
 
 ## Change (user correction to the 0.80–1.25 auto-select)
