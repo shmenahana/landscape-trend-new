@@ -5,7 +5,7 @@ A shipped order is saved only after Stripe charges the card. If /api/orders
 then rejected the address, the customer was charged with no order and no
 signal. Only the browser checks matching the server prevented it.
 
-## Done (not deployed — user is placing a live test order; deploy on their go)
+## Done — committed 577f090, deployed on user's go
 - [x] Committed the deployed /shop reorder first (f1af444)
 - [x] lib/shipping.ts (new): validateShippedCustomer — the ONE copy of the
       rules (first/last name, email, street, city, US state, ZIP / ZIP+4;
@@ -30,8 +30,12 @@ signal. Only the browser checks matching the server prevented it.
 - [x] Real /shop in Chromium sends the trimmed details → passes → 1 Stripe call
 - [x] /api/orders backstop still 400s bad shipped orders; market cash and
       wedding orders with no address → 201 (test rows/files removed)
-- [ ] NOT verifiable locally: a real intent appearing in Stripe and a completed
-      paid order — do on production after deploy
+- [x] Production after deploy: .env 12 keys, DASHBOARD_PASSWORD not rotated,
+      uploads 137 (user's live test order intact), pm2 both online. Live intent
+      route: no details / missing street / bad state / bad ZIP / bad email →
+      400, no clientSecret. Live /shop walk → intent 200, $18.99 (1899),
+      Payment Element + Pay Now shown. One unpaid test intent left (…mKBkEo).
+      Paid completion NOT exercised by me (would charge a real card).
 
 ## Flagged, not fixed (out of scope)
 - /api/gallery/[id]/intent creates a shipped PaymentIntent with no address

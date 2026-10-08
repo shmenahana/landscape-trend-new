@@ -193,7 +193,7 @@ Agents: log every change here with timestamp, role, file, and what was done.
 - Untouched: /order, /wedding, CropStep, lib/cropImage.ts, /api/orders,
   create-payment-intent.
 
-## 2026-10-07 — Address validated before the PaymentIntent (NOT DEPLOYED)
+## 2026-10-07 — Address validated before the PaymentIntent (deployed, 577f090)
 - lib/shipping.ts (new): validateShippedCustomer — single source of the
   shipped-order name/email/address rules.
 - app/api/create-payment-intent/route.ts: shipped → validate, 400 before any
