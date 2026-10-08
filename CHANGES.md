@@ -192,3 +192,11 @@ Agents: log every change here with timestamp, role, file, and what was done.
   payment card shows "Ships to …". Validation unchanged, now gates payment.
 - Untouched: /order, /wedding, CropStep, lib/cropImage.ts, /api/orders,
   create-payment-intent.
+
+## 2026-10-07 — Address validated before the PaymentIntent (NOT DEPLOYED)
+- lib/shipping.ts (new): validateShippedCustomer — single source of the
+  shipped-order name/email/address rules.
+- app/api/create-payment-intent/route.ts: shipped → validate, 400 before any
+  Stripe call.
+- app/api/orders/route.ts: duplicate rules removed; backstop uses the shared fn.
+- app/shop/page.tsx: intent request body now carries name/email/address.

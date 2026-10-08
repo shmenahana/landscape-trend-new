@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isPackageKey, priceCents, shippedTotalCents } from "@/lib/pricing";
+import { validateShippedCustomer } from "@/lib/shipping";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,18 @@ export async function POST(req: NextRequest) {
   }
   // Online shop orders include flat-rate shipping on top of the package price.
   const shipped = body?.orderType === "shipped" || body?.shipping === true;
+  // A shipped order is saved only after the charge succeeds, so its customer
+  // + address must pass the orders route's exact rules BEFORE an intent can
+  // exist — otherwise a rejected address means charged with no order.
+  if (shipped) {
+    const customer = validateShippedCustomer({
+      firstName: body?.firstName,
+      lastName: body?.lastName,
+      email: body?.email,
+      shippingAddress: body?.shippingAddress,
+    });
+    if (!customer.ok) return NextResponse.json({ error: customer.error }, { status: 400 });
+  }
   const secret = process.env.STRIPE_SECRET_KEY;
   if (!secret) {
     return NextResponse.json(

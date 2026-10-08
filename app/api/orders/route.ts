@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, rowToOrder, type OrderRow, type ShippingAddress } from "@/lib/db";
+import { db, rowToOrder, type OrderRow } from "@/lib/db";
+import { validateShippedCustomer } from "@/lib/shipping";
 import { toE164 } from "@/lib/phone";
 import { isOperator } from "@/lib/auth";
 import { generateOrderCode, isPackageKey, priceCents, shippedTotalCents, SHIPPING_CENTS, type PackageKey } from "@/lib/pricing";
@@ -39,32 +40,6 @@ function sourcePathFor(photoUrl: string): string | null {
 }
 
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const US_STATES = new Set([
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
-  "KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY",
-  "NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
-  "WI","WY","DC",
-]);
-
-function parseShippingAddress(raw: string): { ok: true; value: ShippingAddress } | { ok: false; error: string } {
-  let obj: any;
-  try {
-    obj = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: "Invalid shipping address" };
-  }
-  const street = String(obj?.street || "").trim().slice(0, 200);
-  const city = String(obj?.city || "").trim().slice(0, 120);
-  const state = String(obj?.state || "").trim().toUpperCase().slice(0, 2);
-  const zip = String(obj?.zip || "").trim().slice(0, 10);
-  if (!street) return { ok: false, error: "Street address is required" };
-  if (!city) return { ok: false, error: "City is required" };
-  if (!US_STATES.has(state)) return { ok: false, error: "A valid US state is required" };
-  if (!/^\d{5}(-\d{4})?$/.test(zip)) return { ok: false, error: "A valid ZIP code is required" };
-  return { ok: true, value: { street, city, state, zip } };
-}
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
@@ -116,13 +91,16 @@ export async function POST(req: NextRequest) {
   let shippingAddressJson: string | null = null;
   let shippingRate: number | null = null;
   if (isShipped) {
-    if (!lastName) return NextResponse.json({ error: "lastName required" }, { status: 400 });
-    if (!EMAIL_RE.test(email)) {
-      return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
-    }
-    const addr = parseShippingAddress(String(form.get("shippingAddress") || ""));
-    if (!addr.ok) return NextResponse.json({ error: addr.error }, { status: 400 });
-    shippingAddressJson = JSON.stringify(addr.value);
+    // Same shared rules create-payment-intent already enforced before the
+    // charge — kept here as the backstop.
+    const customer = validateShippedCustomer({
+      firstName,
+      lastName,
+      email,
+      shippingAddress: String(form.get("shippingAddress") || ""),
+    });
+    if (!customer.ok) return NextResponse.json({ error: customer.error }, { status: 400 });
+    shippingAddressJson = JSON.stringify(customer.value.address);
     shippingRate = SHIPPING_CENTS / 100;
   }
 

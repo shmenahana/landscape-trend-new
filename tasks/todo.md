@@ -1,3 +1,44 @@
+# Tasks: Validate shipping address BEFORE the Stripe PaymentIntent
+
+## Problem
+A shipped order is saved only after Stripe charges the card. If /api/orders
+then rejected the address, the customer was charged with no order and no
+signal. Only the browser checks matching the server prevented it.
+
+## Done (not deployed — user is placing a live test order; deploy on their go)
+- [x] Committed the deployed /shop reorder first (f1af444)
+- [x] lib/shipping.ts (new): validateShippedCustomer — the ONE copy of the
+      rules (first/last name, email, street, city, US state, ZIP / ZIP+4;
+      phone optional). Accepts the orders form's JSON string or an object.
+- [x] /api/create-payment-intent: for shipped orders, validate → 400 BEFORE
+      the Stripe key check and before any Stripe call
+- [x] /api/orders: old EMAIL_RE / US_STATES / parseShippingAddress deleted;
+      the backstop now calls the same shared function (messages unchanged)
+- [x] /shop: ShippedPayment sends {firstName,lastName,email,shippingAddress}
+      in the intent body. Unavoidable: the route can't validate data it never
+      receives, and without this every live checkout would 400. No UI,
+      step-order, crop, or pricing change.
+
+## Verified (local, fake Stripe keys + an https tracer logging every
+## outbound call to api.stripe.com)
+- [x] build passes (and rebuilt clean afterwards — no fake key in .next)
+- [x] 13 invalid shipped intent requests (no details/old client, each field
+      missing, bad email/state/ZIP, non-object & malformed address,
+      `shipping:true` w/o address) → 400, 0 Stripe calls each
+- [x] Valid shipped (incl. ZIP+4, lowercase state) and market → exactly 1
+      POST /v1/payment_intents each (502 only because the key is fake)
+- [x] Real /shop in Chromium sends the trimmed details → passes → 1 Stripe call
+- [x] /api/orders backstop still 400s bad shipped orders; market cash and
+      wedding orders with no address → 201 (test rows/files removed)
+- [ ] NOT verifiable locally: a real intent appearing in Stripe and a completed
+      paid order — do on production after deploy
+
+## Flagged, not fixed (out of scope)
+- /api/gallery/[id]/intent creates a shipped PaymentIntent with no address
+  validation at all — same charged-without-order risk for gallery orders.
+
+---
+
 # Tasks: /shop — prices up front, address last
 
 ## Problem

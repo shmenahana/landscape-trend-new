@@ -27,3 +27,9 @@
   FIT. User's rule: always default to FILL; FIT auto-selects only for extreme
   ratios (< 0.6 or > 1.67) or when FILL can't reach 720px. When a threshold
   would change behavior for the *common* input, raise it before shipping.
+
+## Server-side checks must run before money moves
+- Any validation that can reject an order must run before the charge exists
+  (here: before the PaymentIntent), via ONE shared function — never rely on
+  client checks "happening to match" the server. Check every intent route:
+  /api/create-payment-intent, /api/gallery/[id]/intent, /api/tip.

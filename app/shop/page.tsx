@@ -372,6 +372,12 @@ export default function ShopPage() {
 
               <ShippedPayment
                 pkg={pkg}
+                customer={{
+                  firstName: firstName.trim(),
+                  lastName: lastName.trim(),
+                  email: email.trim(),
+                  shippingAddress: { street: street.trim(), city: city.trim(), state: stateCode, zip: zip.trim() },
+                }}
                 submitting={submitting}
                 onSuccess={async (paymentIntentId) => {
                   try {
@@ -462,9 +468,17 @@ function PackageOption({ active, onClick, count, price }: { active: boolean; onC
 }
 
 function ShippedPayment({
-  pkg, submitting, onSuccess,
+  pkg, customer, submitting, onSuccess,
 }: {
   pkg: PackageKey;
+  // Sent with the intent request so the server validates the address before
+  // any charge can exist.
+  customer: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    shippingAddress: { street: string; city: string; state: string; zip: string };
+  };
   submitting: boolean;
   onSuccess: (paymentIntentId: string) => Promise<void>;
 }) {
@@ -481,7 +495,7 @@ function ShippedPayment({
       const res = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ package: pkg, orderType: "shipped" }),
+        body: JSON.stringify({ package: pkg, orderType: "shipped", ...customer }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not start card payment");
