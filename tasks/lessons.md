@@ -33,3 +33,9 @@
   (here: before the PaymentIntent), via ONE shared function — never rely on
   client checks "happening to match" the server. Check every intent route:
   /api/create-payment-intent, /api/gallery/[id]/intent, /api/tip.
+
+## Test-only build flags (NEXT_PUBLIC_*)
+- A local build with a fake NEXT_PUBLIC_* key leaves the value in
+  `.next/cache/webpack/*.pack` even after a clean rebuild. Grep all of `.next`
+  (not just static/) and `rm -rf .next/cache` afterwards. Deploys are safe:
+  deploy.py excludes `.next` and the server builds with its own `.env`.

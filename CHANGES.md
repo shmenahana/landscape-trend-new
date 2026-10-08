@@ -207,3 +207,14 @@ Agents: log every change here with timestamp, role, file, and what was done.
   localStorage; rail sticky + internally scrolling on lg+. Online/Wedding
   sections removed from under the sheet. Cards unchanged (single column in
   the rail). Right column: Print Sheet Builder, On this sheet, Batch Hopper.
+
+## 2026-10-07 — 300 DPI tag on print sheet; gallery pre-charge address check
+- lib/crc32.ts (new): CRC-32 moved out of lib/zip.ts so the browser can use it.
+- lib/printSheetImage.ts: pHYs chunk (300 DPI) inserted after IHDR before
+  download. Pixels/layout unchanged.
+- lib/shipping.ts: + validateGalleryCustomer (single full-name field), same
+  shared address/email rules.
+- app/api/gallery/[id]/intent: validate → 400 before any Stripe call.
+- app/api/gallery/[id]/order: its own copy of the rules removed; backstop
+  uses the shared fn.
+- app/gallery/[id]/page.tsx: intent body carries name/email/address.

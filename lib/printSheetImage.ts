@@ -7,6 +7,7 @@
 // at full quality with no banding.
 
 import type { CropArea } from "../app/CroppedImage";
+import { crc32 } from "./crc32";
 
 export type PrintCell =
   | { kind: "empty" }
@@ -163,6 +164,27 @@ function timestamp(): string {
 }
 
 /**
+ * Tag a PNG with its print resolution. Canvas exports carry no DPI, so print
+ * software may guess 72/96 and size the sheet wrong; a pHYs chunk (pixels per
+ * metre) right after IHDR makes 2550x3300 read as 8.5x11 in at 300 DPI.
+ * Pixel data is untouched.
+ */
+async function withDpi(png: Blob, dpi: number): Promise<Blob> {
+  const bytes = new Uint8Array(await png.arrayBuffer());
+  const IHDR_END = 8 + 4 + 4 + 13 + 4; // signature + IHDR length/type/data/CRC
+  const ppm = Math.round(dpi / 0.0254); // 300 DPI -> 11811 px/m
+  const chunk = new Uint8Array(4 + 4 + 9 + 4);
+  const v = new DataView(chunk.buffer);
+  v.setUint32(0, 9); // data length
+  chunk.set([0x70, 0x48, 0x59, 0x73], 4); // "pHYs"
+  v.setUint32(8, ppm); // x pixels per unit
+  v.setUint32(12, ppm); // y pixels per unit
+  chunk[16] = 1; // unit: metre
+  v.setUint32(17, crc32(chunk.subarray(4, 17))); // CRC over type + data
+  return new Blob([bytes.subarray(0, IHDR_END), chunk, bytes.subarray(IHDR_END)], { type: "image/png" });
+}
+
+/**
  * Render the sheet and trigger a PNG download. Returns once the download has
  * been kicked off (all images loaded + canvas exported).
  */
@@ -244,7 +266,7 @@ export async function downloadPrintSheet(
   );
   if (!blob) throw new Error("Failed to encode print sheet PNG");
 
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(await withDpi(blob, DPI));
   const a = document.createElement("a");
   a.href = url;
   a.download = `magnet-sheet-${magnetSize}-${timestamp()}.png`;

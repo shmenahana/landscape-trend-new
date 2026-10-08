@@ -1,3 +1,52 @@
+# Tasks: 300 DPI tag on the print sheet + pre-charge address check for galleries
+
+## Decisions (user, 2026-10-07)
+- Market tab count stays queue + cash-waiting. Archived stays in Market tab.
+
+## A. 300 DPI tag
+- [x] lib/crc32.ts (new, pure): CRC-32 moved out of lib/zip.ts (which needs
+      Node fs and can't load in the browser); zip.ts imports it
+- [x] lib/printSheetImage.ts: insert a PNG pHYs chunk right after IHDR —
+      11811 px/m (= 300 DPI), unit = metre — before the download. Pixels and
+      layout untouched.
+- [x] Verify: file still 2550x3300, pHYs present = 300 DPI, CRC valid
+      (decoder accepts it), pixel data identical to an untagged export
+
+## B. Gallery checkout: address validated before the PaymentIntent
+- [x] lib/shipping.ts: address + email rules shared by every flow;
+      validateGalleryCustomer({name,email,shippingAddress}) for the gallery's
+      single full-name field (unchanged semantics: name required, split later)
+- [x] /api/gallery/[id]/intent: validate → 400 before any Stripe call
+- [x] /api/gallery/[id]/order: its own third copy of the rules deleted;
+      backstop uses validateGalleryCustomer (same messages)
+- [x] gallery page: intent request body adds name/email/shippingAddress it
+      already holds (body only — no UI change)
+- [x] Verify w/ fake key + Stripe call tracer: invalid → 400, 0 Stripe calls;
+      valid → 1 create; real gallery page sends details; order backstop 400s
+
+## Deploy
+- [x] deploy.py → DEPLOY SUCCESS; .env 12 keys, DASHBOARD_PASSWORD not rotated,
+      uploads 138, pm2 both online; prod bundles contain no test key.
+      Live gallery intent (real unexpired gallery): {count} only / missing
+      name / missing street / bad state / bad ZIP → 400, no clientSecret.
+      Valid → 200, $14.99 (1 magnet $8 + $6.99), one unpaid test intent
+      (…OtKy2D) left in Stripe.
+
+## Results (local, fake Stripe keys + tracer on every api.stripe.com call)
+- Gallery intent: {count} only (current live client), missing name, bad
+  email, missing street/city, bad state/ZIP, non-object address → 400 each,
+  0 Stripe calls. Valid (single-word name, ZIP+4) → exactly 1 create each.
+  Bad count → 400, unknown gallery → 404 (unchanged guards).
+- Gallery order backstop: no street / no name / no photos → 400; valid
+  reaches Stripe verify. /shop intent unchanged (bad ZIP 400, valid 1 call).
+- Real gallery page: client still blocks empty address before any request;
+  then sends {count,name,email,shippingAddress}.
+- Print sheet: chunks IHDR,pHYs,IDAT,IEND; pHYs 11811x11811 px/m unit=metre
+  = 300.00 DPI; 2550x3300; browser decodes it; all chunk CRCs valid (zlib).
+- Temp gallery removed; rebuilt clean (no fake key in .next).
+
+---
+
 # Tasks: Dashboard — tabbed queues left, production right
 
 ## Problem

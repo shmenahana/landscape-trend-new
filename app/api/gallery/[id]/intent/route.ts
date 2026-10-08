@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, rowToGallery, isGalleryExpired, type GalleryRow } from "@/lib/db";
 import { galleryOrderTotalCents } from "@/lib/pricing";
+import { validateGalleryCustomer } from "@/lib/shipping";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!Number.isFinite(count) || count < 1 || count > gallery.photos.length) {
     return NextResponse.json({ error: "Invalid magnet count" }, { status: 400 });
   }
+  // The order is saved only after the charge succeeds, so the shipping details
+  // must pass the order route's exact rules BEFORE an intent can exist —
+  // otherwise a rejected address means charged with no order.
+  const customer = validateGalleryCustomer({
+    name: body?.name,
+    email: body?.email,
+    shippingAddress: body?.shippingAddress,
+  });
+  if (!customer.ok) return NextResponse.json({ error: customer.error }, { status: 400 });
 
   const secret = process.env.STRIPE_SECRET_KEY;
   if (!secret) {

@@ -488,7 +488,9 @@ function GalleryPayment({
     fetch(`/api/gallery/${galleryId}/intent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ count }),
+      // Details go with the intent so the server validates the address before
+      // any charge can exist.
+      body: JSON.stringify({ count, name, email, shippingAddress }),
     })
       .then(async (r) => {
         const j = await r.json().catch(() => ({}));

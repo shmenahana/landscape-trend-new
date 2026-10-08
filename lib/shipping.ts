@@ -1,7 +1,8 @@
-// The one set of rules for a shipped order's customer + address. Used by
-// /api/create-payment-intent (before any charge can exist) and /api/orders
-// (backstop after payment). Edit here only — a second copy is how a customer
-// ends up charged for an order the server then refuses.
+// The one set of rules for a shipped order's customer + address, for every
+// checkout that ships: /shop (create-payment-intent before the charge,
+// /api/orders as the backstop) and wedding galleries (gallery intent before
+// the charge, gallery order as the backstop). Edit here only — a second copy
+// is how a customer ends up charged for an order the server then refuses.
 
 import type { ShippingAddress } from "@/lib/db";
 
@@ -40,6 +41,26 @@ export function validateShippedCustomer(input: {
   const address = parseShippingAddress(input.shippingAddress);
   if (!address.ok) return address;
   return { ok: true, value: { firstName, lastName, email, address: address.value } };
+}
+
+export type GalleryCustomer = { name: string; email: string; address: ShippingAddress };
+
+/**
+ * Same rules for a wedding-gallery order, whose form has a single "Full Name"
+ * field (required; split into first/last when the order is saved).
+ */
+export function validateGalleryCustomer(input: {
+  name: unknown;
+  email: unknown;
+  shippingAddress: unknown;
+}): { ok: true; value: GalleryCustomer } | { ok: false; error: string } {
+  const name = String(input.name ?? "").trim().slice(0, 120);
+  const email = String(input.email ?? "").trim().slice(0, 200);
+  if (!name) return { ok: false, error: "Please enter a name for shipping." };
+  if (!EMAIL_RE.test(email)) return { ok: false, error: "A valid email is required" };
+  const address = parseShippingAddress(input.shippingAddress);
+  if (!address.ok) return address;
+  return { ok: true, value: { name, email, address: address.value } };
 }
 
 function parseShippingAddress(raw: unknown): { ok: true; value: ShippingAddress } | { ok: false; error: string } {
