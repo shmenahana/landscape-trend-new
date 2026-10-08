@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, rowToOrder, type OrderRow, type ShippingAddress } from "@/lib/db";
 import { toE164 } from "@/lib/phone";
 import { isOperator } from "@/lib/auth";
-import { generateOrderCode, isPackageKey, priceCents, shippedTotalCents, SHIPPING_CENTS } from "@/lib/pricing";
+import { generateOrderCode, isPackageKey, priceCents, shippedTotalCents, SHIPPING_CENTS, type PackageKey } from "@/lib/pricing";
 import path from "path";
 import fs from "fs/promises";
+import { existsSync } from "fs";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
@@ -17,8 +18,27 @@ export async function GET(req: NextRequest) {
   const rows = db
     .prepare("SELECT * FROM orders ORDER BY datetime(createdAt) DESC")
     .all() as OrderRow[];
-  return NextResponse.json({ orders: rows.map(rowToOrder) });
+  return NextResponse.json({
+    orders: rows.map((r) => {
+      const o = rowToOrder(r);
+      return { ...o, sourcePhotos: o.photos.map(sourcePathFor) };
+    }),
+  });
 }
+
+// The uncropped "source" copy of a photo lives next to its crop by filename
+// convention: /uploads/<id>/photo-N.jpg -> photo-N-source.jpg. Orders placed
+// before sources existed have none, so this returns null unless it's on disk.
+function sourcePathFor(photoUrl: string): string | null {
+  const m = /^\/uploads\/([0-9a-f-]+)\/photo-(\d+)\.(?:jpg|png)$/.exec(photoUrl);
+  if (!m) return null;
+  const name = `photo-${m[2]}-source.jpg`;
+  return existsSync(path.join(process.cwd(), "public", "uploads", m[1], name))
+    ? `/uploads/${m[1]}/${name}`
+    : null;
+}
+
+const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const US_STATES = new Set([
@@ -49,19 +69,22 @@ function parseShippingAddress(raw: string): { ok: true; value: ShippingAddress }
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const orderType = String(form.get("orderType") || "market");
-  if (orderType !== "market" && orderType !== "shipped") {
+  if (orderType !== "market" && orderType !== "shipped" && orderType !== "wedding") {
     return NextResponse.json({ error: "Invalid order type" }, { status: 400 });
   }
   const isShipped = orderType === "shipped";
+  const isWedding = orderType === "wedding";
 
   const firstName = String(form.get("firstName") || "").trim();
   const lastName = String(form.get("lastName") || "").trim();
   const email = String(form.get("email") || "").trim().slice(0, 200);
   const phoneRaw = String(form.get("phone") || "").trim();
-  const pkg = String(form.get("package") || "");
-  // Shipped orders always use the square crop tool (2x2).
-  const magnetSize = isShipped ? "2x2" : String(form.get("magnetSize") || "2x2");
-  const paymentMethod = isShipped ? "stripe" : String(form.get("paymentMethod") || "");
+  // Wedding guests don't choose a package — one photo, one magnet, prepaid by
+  // the couple. Everyone else picks a 3- or 9-pack.
+  const pkg = isWedding ? "1" : String(form.get("package") || "");
+  // Shipped + wedding orders always use the square crop tool (2x2).
+  const magnetSize = isShipped || isWedding ? "2x2" : String(form.get("magnetSize") || "2x2");
+  const paymentMethod = isShipped ? "stripe" : isWedding ? "cash" : String(form.get("paymentMethod") || "");
   const smsConsent = String(form.get("smsConsent") || "") === "true" ? 1 : 0;
   const paymentIntentIdRaw = form.get("paymentIntentId");
   const paymentIntentId =
@@ -71,13 +94,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid magnet size" }, { status: 400 });
   }
   if (!firstName) return NextResponse.json({ error: "firstName required" }, { status: 400 });
-  if (!isPackageKey(pkg)) {
+  if (!isWedding && !isPackageKey(pkg)) {
     return NextResponse.json({ error: "Invalid package" }, { status: 400 });
   }
 
-  // Phone: required (and normalized) for market; optional for shipped.
+  // Phone: required (and normalized) for market; optional for shipped + wedding.
   let phone = "";
-  if (isShipped) {
+  if (isShipped || isWedding) {
     if (phoneRaw) {
       const norm = toE164(phoneRaw);
       if (!norm) return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
@@ -127,8 +150,10 @@ export async function POST(req: NextRequest) {
           { status: 402 }
         );
       }
-      // Shipped orders must cover package price + flat shipping.
-      const expected = isShipped ? shippedTotalCents(pkg) : priceCents(pkg);
+      // Shipped orders must cover package price + flat shipping. Only market/
+      // shipped orders reach this Stripe branch, so pkg is a valid PackageKey.
+      const pkgKey = pkg as PackageKey;
+      const expected = isShipped ? shippedTotalCents(pkgKey) : priceCents(pkgKey);
       if (intent.amount !== expected || intent.currency !== "usd") {
         return NextResponse.json(
           { error: "Payment amount mismatch" },
@@ -149,7 +174,7 @@ export async function POST(req: NextRequest) {
   }
 
   const photoFiles = form.getAll("photos").filter((v): v is File => v instanceof File);
-  const expected = pkg === "3" ? 3 : 9;
+  const expected = isWedding ? 1 : pkg === "3" ? 3 : 9;
   if (photoFiles.length !== expected) {
     return NextResponse.json(
       { error: `Expected ${expected} photos, got ${photoFiles.length}` },
@@ -169,10 +194,44 @@ export async function POST(req: NextRequest) {
     const buf = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(uploadDir, name), buf);
     photoPaths.push(`/uploads/${id}/${name}`);
+
+    // Optional uncropped copy (client-downscaled JPEG) for redoing a bad crop.
+    // Keyed by index so a missing one can't shift the rest; anything absent or
+    // unexpected is skipped — the order never depends on it.
+    const source = form.get(`source-${i}`);
+    if (source instanceof File && source.type === "image/jpeg" && source.size > 0 && source.size <= MAX_SOURCE_BYTES) {
+      const sbuf = Buffer.from(await source.arrayBuffer());
+      await fs.writeFile(path.join(uploadDir, `photo-${i + 1}-source.jpg`), sbuf);
+    }
   }
 
-  const paymentStatus = paymentMethod === "stripe" ? "paid" : "cash_pending";
-  const orderCode = paymentMethod === "cash" ? generateOrderCode() : "";
+  // Wedding orders also keep the ORIGINAL uncropped photo for the couple's
+  // gallery. Cropped copies above still drive printing; these originals live in
+  // an /originals subfolder and are optional (older clients may not send them).
+  let originalPhotosJson: string | null = null;
+  if (isWedding) {
+    const originalFiles = form.getAll("originals").filter((v): v is File => v instanceof File);
+    if (originalFiles.length > 0) {
+      const originalsDir = path.join(uploadDir, "originals");
+      await fs.mkdir(originalsDir, { recursive: true });
+      const originalPaths: string[] = [];
+      for (let i = 0; i < originalFiles.length; i++) {
+        const file = originalFiles[i];
+        const ext = file.type === "image/png" ? "png"
+          : file.type === "image/webp" ? "webp"
+          : "jpg";
+        const name = `original-${i + 1}.${ext}`;
+        const buf = Buffer.from(await file.arrayBuffer());
+        await fs.writeFile(path.join(originalsDir, name), buf);
+        originalPaths.push(`/uploads/${id}/originals/${name}`);
+      }
+      originalPhotosJson = JSON.stringify(originalPaths);
+    }
+  }
+
+  // Wedding orders are prepaid by the couple — always "paid", with no cash code.
+  const paymentStatus = paymentMethod === "stripe" || isWedding ? "paid" : "cash_pending";
+  const orderCode = paymentMethod === "cash" && !isWedding ? generateOrderCode() : "";
 
   // Wait-time estimate (market only): how many market orders are already in the
   // active queue ahead of this one. Counted BEFORE inserting so the new order
@@ -188,12 +247,14 @@ export async function POST(req: NextRequest) {
     `INSERT INTO orders
        (id, firstName, phone, package, status, photos, magnetSize,
         paymentMethod, paymentStatus, stripePaymentIntentId, orderCode,
-        smsConsent, orderType, lastName, email, shippingAddress, shippingRate)
-     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        smsConsent, orderType, lastName, email, shippingAddress, shippingRate,
+        originalPhotos)
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id, firstName, phone, pkg, JSON.stringify(photoPaths), magnetSize,
     paymentMethod, paymentStatus, paymentIntentId, orderCode,
-    smsConsent, orderType, lastName || null, email || null, shippingAddressJson, shippingRate
+    smsConsent, orderType, lastName || null, email || null, shippingAddressJson, shippingRate,
+    originalPhotosJson
   );
 
   const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as OrderRow;

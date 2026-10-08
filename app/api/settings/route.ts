@@ -19,11 +19,20 @@ function setSetting(key: string, value: string): void {
 }
 
 // Public: customer order page reads the active magnet size to set crop aspect.
-// preferredAutoFillCategory is also returned for the dashboard's convenience but is harmless if public.
+// The /wedding page reads the wedding fields to render the couple header, so
+// these are intentionally public. preferredAutoFillCategory is harmless if public.
 export async function GET() {
   const activeMagnetSize = (getSetting("activeMagnetSize") as MagnetSize) || "2x2";
   const preferredAutoFillCategory = getSetting("preferredAutoFillCategory") || "";
-  return NextResponse.json({ activeMagnetSize, preferredAutoFillCategory });
+  return NextResponse.json({
+    activeMagnetSize,
+    preferredAutoFillCategory,
+    weddingModeActive: getSetting("weddingModeActive") === "true",
+    coupleDisplayText: getSetting("coupleDisplayText") || "",
+    eventDate: getSetting("eventDate") || "",
+    customSubtitle: getSetting("customSubtitle") || "",
+    coupleEmail: getSetting("coupleEmail") || "",
+  });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -51,8 +60,38 @@ export async function PATCH(req: NextRequest) {
     setSetting("preferredAutoFillCategory", v);
   }
 
+  // Wedding event settings. All optional; only the keys present are updated.
+  if ("weddingModeActive" in body) {
+    const next = body.weddingModeActive ? "true" : "false";
+    const prev = getSetting("weddingModeActive");
+    // Turning the event ON (from off) starts a new event window. Everything the
+    // export/gallery features count is scoped to orders since this timestamp, so
+    // a fresh wedding never mixes with a previous event's photos.
+    if (next === "true" && prev !== "true") {
+      setSetting("weddingEventStartedAt", new Date().toISOString().replace("T", " ").slice(0, 19));
+    }
+    setSetting("weddingModeActive", next);
+  }
+  if ("coupleDisplayText" in body) {
+    setSetting("coupleDisplayText", String(body.coupleDisplayText ?? "").slice(0, 200));
+  }
+  if ("eventDate" in body) {
+    setSetting("eventDate", String(body.eventDate ?? "").slice(0, 60));
+  }
+  if ("customSubtitle" in body) {
+    setSetting("customSubtitle", String(body.customSubtitle ?? "").slice(0, 200));
+  }
+  if ("coupleEmail" in body) {
+    setSetting("coupleEmail", String(body.coupleEmail ?? "").trim().slice(0, 200));
+  }
+
   return NextResponse.json({
     activeMagnetSize: getSetting("activeMagnetSize") || "2x2",
     preferredAutoFillCategory: getSetting("preferredAutoFillCategory") || "",
+    weddingModeActive: getSetting("weddingModeActive") === "true",
+    coupleDisplayText: getSetting("coupleDisplayText") || "",
+    eventDate: getSetting("eventDate") || "",
+    customSubtitle: getSetting("customSubtitle") || "",
+    coupleEmail: getSetting("coupleEmail") || "",
   });
 }

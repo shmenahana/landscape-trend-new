@@ -11,6 +11,29 @@ const PRICES: Record<PackageKey, number> = {
 // Flat shipping rate for online /shop orders (shipped to the customer).
 export const SHIPPING_CENTS = 699; // $6.99
 
+// ── Wedding gallery upsell pricing ───────────────────────────────────────────
+// Within the 30-day gallery window: $8 each, or 3 for $20 (auto-applied).
+// After expiry the gallery is inaccessible, so the $12/each rate is only shown
+// as urgency copy and never actually charged.
+export const GALLERY_MAGNET_CENTS = 800; // $8 each
+export const GALLERY_BUNDLE_3_CENTS = 2000; // 3 for $20
+export const GALLERY_EXPIRED_EACH_CENTS = 1200; // $12 each (display only)
+
+// Best price for `count` magnets: pack every group of 3 into the $20 bundle,
+// charge the remainder at $8 each (2 singles at $16 beat a $20 bundle, so we
+// never round up).
+export function galleryMagnetTotalCents(count: number): number {
+  const n = Math.max(0, Math.floor(count));
+  const bundles = Math.floor(n / 3);
+  const remainder = n % 3;
+  return bundles * GALLERY_BUNDLE_3_CENTS + remainder * GALLERY_MAGNET_CENTS;
+}
+
+// Full gallery order total: magnets + flat shipping.
+export function galleryOrderTotalCents(count: number): number {
+  return galleryMagnetTotalCents(count) + SHIPPING_CENTS;
+}
+
 export function priceCents(pkg: PackageKey): number {
   return PRICES[pkg];
 }

@@ -12,3 +12,4 @@ dist
 public/uploads
 .DS_Store
 next-env.d.ts
+*.tsbuildinfo

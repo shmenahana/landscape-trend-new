@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Cropper from "react-easy-crop";
 import { formatDisplay } from "@/lib/phone";
+import { galleryMagnetTotalCents } from "@/lib/pricing";
 import { CroppedImage, type CropArea } from "../CroppedImage";
+import { downloadPrintSheet, type PrintCell } from "@/lib/printSheetImage";
 
 type MagnetSize = "2x2" | "2x3";
 
@@ -26,13 +28,32 @@ type Order = {
   stripePaymentIntentId: string | null;
   orderCode: string;
   smsConsent: boolean;
-  orderType: "market" | "shipped";
+  orderType: "market" | "shipped" | "wedding" | "gallery_order";
   lastName: string | null;
   email: string | null;
   shippingAddress: string | null;
   shippingRate: number | null;
   trackingNumber: string | null;
+  tipAmount: number | null;
+  tipPaymentIntentId: string | null;
+  galleryId: string | null;
+  // Uncropped copy per photo (index-aligned with `photos`); null when the
+  // order predates source uploads. Derived server-side from what's on disk.
+  sourcePhotos?: (string | null)[];
 };
+
+// Small "Original" link under a photo — opens the uncropped source in a new
+// tab. Renders nothing when there's no source (e.g. pre-change orders).
+function OriginalLink({ order, index }: { order: Order; index: number }) {
+  const src = order.sourcePhotos?.[index];
+  if (!src) return null;
+  return (
+    <a href={src} target="_blank" rel="noopener noreferrer"
+      className="block text-[10px] text-center text-warmgray hover:text-gold underline-offset-2 hover:underline mt-0.5">
+      Original
+    </a>
+  );
+}
 
 function parseAddress(raw: string | null): ShippingAddress | null {
   if (!raw) return null;
@@ -45,6 +66,27 @@ function parseAddress(raw: string | null): ShippingAddress | null {
 
 function priceForPackage(pkg: string): string {
   return pkg === "9" ? "$25" : "$12";
+}
+
+function isOnlineOrder(o: Order): boolean {
+  return o.orderType === "shipped" || o.orderType === "gallery_order";
+}
+
+// One-line description for the "On this sheet" list. Online orders have no
+// phone (gallery) and a variable magnet count, so "N-pack · <phone>" doesn't
+// describe them — say how many magnets and where the order came from instead.
+function sheetOrderDetail(o: Order): string {
+  const bits: string[] = [];
+  if (isOnlineOrder(o)) {
+    const n = o.photos.length;
+    bits.push(`${n} magnet${n === 1 ? "" : "s"}`);
+    bits.push(o.orderType === "gallery_order" ? "gallery" : "online");
+  } else {
+    bits.push(`${o.package}-pack`);
+  }
+  const phone = formatDisplay(o.phone);
+  if (phone) bits.push(phone);
+  return bits.join(" · ");
 }
 
 type LibraryDesign = {
@@ -109,6 +151,7 @@ export default function Dashboard() {
   const [pickerForSlot, setPickerForSlot] = useState<number | null>(null);
   const [cropForSlot, setCropForSlot] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+  const [downloadingSheet, setDownloadingSheet] = useState(false);
   const knownIdsRef = useRef<Set<string> | null>(null);
 
   async function refresh() {
@@ -207,7 +250,8 @@ export default function Dashboard() {
 
   function canAddOrder(o: Order): boolean {
     if (ordersOnSheet.has(o.id)) return false;
-    const need = o.package === "9" ? 9 : 3;
+    // Photos-per-order drives slot count: market 3/9-packs, wedding = 1 photo.
+    const need = o.photos.length;
     if (need > emptyCount) return false;
     // With 9 slots, a 9-pack uses the whole sheet — no room for any other
     // customer order alongside it.
@@ -222,7 +266,7 @@ export default function Dashboard() {
 
   function addOrderToSheet(o: Order) {
     if (!canAddOrder(o)) return;
-    const need = o.package === "9" ? 9 : 3;
+    const need = o.photos.length;
     setSlots((cur) => {
       const next = [...cur];
       let placed = 0;
@@ -272,31 +316,58 @@ export default function Dashboard() {
     });
   }
 
-  function openPrint() {
+  async function openPrint() {
+    if (downloadingSheet) return;
     const hasAnything = slots.some((s) => s.kind !== "empty");
     if (!hasAnything) return;
-    const compact = slots.map((s) => {
-      if (s.kind === "empty") return null;
-      if (s.kind === "order") return { k: "o", oid: s.orderId, pi: s.photoIndex };
-      return { k: "s", did: s.designId, c: s.crop || null };
+
+    // Build the print cells straight from the sheet state — the dashboard
+    // already holds every order photo, design path, label and colour, so we
+    // can rasterize the sheet client-side without a round-trip to /print.
+    const cells: PrintCell[] = slots.map((s) => {
+      if (s.kind === "order") {
+        const o = orderById(s.orderId);
+        const photo = o?.photos[s.photoIndex];
+        if (!o || !photo) return { kind: "empty" };
+        return { kind: "order", photo, label: o.firstName, color: colorForOrder(s.orderId) };
+      }
+      if (s.kind === "stock") {
+        const d = designsCache[s.designId];
+        if (!d) return { kind: "empty" };
+        return { kind: "stock", photo: d.path, crop: s.crop || null };
+      }
+      return { kind: "empty" };
     });
-    const slotsParam = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
-    const params = new URLSearchParams({ size: magnetSize, slots: slotsParam });
-    window.open(`/print?${params}`, "_blank", "noopener");
+
+    setDownloadingSheet(true);
+    try {
+      await downloadPrintSheet(cells, magnetSize);
+    } catch (err) {
+      console.error("Print sheet download failed", err);
+      alert("Could not generate the print sheet image. Please try again.");
+    } finally {
+      setDownloadingSheet(false);
+    }
   }
 
   async function markSheetPrinted() {
-    const ids = Array.from(ordersOnSheet);
-    if (ids.length === 0) return;
-    await Promise.all(
-      ids.map((id) =>
-        fetch(`/api/orders/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "printing" }),
-        })
-      )
-    );
+    if (ordersOnSheet.size === 0) return;
+    // A reprint must not rewind fulfillment. An online order that's already
+    // shipped stays shipped — moving it back to "printing" would drop it out of
+    // the Shipped list into "awaiting shipment" and hide its tracking number,
+    // which is exactly the un-shipping dance reprints are meant to avoid.
+    const ids = Array.from(ordersOnSheet).filter((id) => orderById(id)?.status !== "shipped");
+    if (ids.length > 0) {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/orders/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "printing" }),
+          })
+        )
+      );
+    }
     clearSheet();
     refresh();
   }
@@ -320,6 +391,17 @@ export default function Dashboard() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "picked_up" }),
+    });
+    refresh();
+  }
+
+  // Wedding orders have no phone number, so "ready" is a plain status change
+  // (no SMS) rather than going through /api/notify.
+  async function markReady(o: Order) {
+    await fetch(`/api/orders/${o.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "ready" }),
     });
     refresh();
   }
@@ -366,9 +448,9 @@ export default function Dashboard() {
   // Archived orders (any type) are hidden from every active view and the wait
   // estimate. They sit in their own collapsed section until unarchived.
   const archivedOrders = orders.filter((o) => o.status === "archived");
-  // Market orders only — online/shipped orders live in their own section and
-  // never enter the print sheet builder. Archived excluded.
-  const marketOrders = orders.filter((o) => o.orderType !== "shipped" && o.status !== "archived");
+  // Market orders only — online/shipped and wedding orders live in their own
+  // sections and don't count toward the market wait estimate. Archived excluded.
+  const marketOrders = orders.filter((o) => o.orderType === "market" && o.status !== "archived");
   // Cash orders that haven't been confirmed yet — they sit in a separate
   // section and are NOT in the print queue until the operator collects cash.
   const cashPendingOrders = marketOrders.filter((o) => o.paymentStatus === "cash_pending");
@@ -378,10 +460,18 @@ export default function Dashboard() {
   );
   const completedOrders = marketOrders.filter((o) => o.status === "picked_up");
 
-  // Online (shipped) orders. Awaiting shipment first, then already shipped.
-  const shippedOrders = orders.filter((o) => o.orderType === "shipped" && o.status !== "archived");
+  // Online orders — shipped shop orders + gallery upsell orders. Both ship
+  // nationwide via the same fulfillment flow. Awaiting shipment first.
+  const shippedOrders = orders.filter(
+    (o) => (o.orderType === "shipped" || o.orderType === "gallery_order") && o.status !== "archived"
+  );
   const awaitingShipment = shippedOrders.filter((o) => o.status !== "shipped");
   const alreadyShipped = shippedOrders.filter((o) => o.status === "shipped");
+
+  // Wedding orders — their own section, active (non-picked-up) first.
+  const weddingOrders = orders.filter((o) => o.orderType === "wedding" && o.status !== "archived");
+  const activeWeddingOrders = weddingOrders.filter((o) => o.status !== "picked_up");
+  const doneWeddingOrders = weddingOrders.filter((o) => o.status === "picked_up");
 
   async function deleteOrder(o: Order) {
     const res = await fetch(`/api/orders/${o.id}`, { method: "DELETE" });
@@ -430,6 +520,9 @@ export default function Dashboard() {
           </Link>
           <Link href="/dashboard/inquiries" className="text-xs text-gold uppercase tracking-widest hover:text-navy">
             Inquiries{inquiryCount !== null ? ` (${inquiryCount})` : ""}
+          </Link>
+          <Link href="/dashboard/wedding" className="text-xs text-gold uppercase tracking-widest hover:text-navy">
+            Wedding{weddingOrders.length ? ` (${weddingOrders.length})` : ""}
           </Link>
           <div className="text-xs text-warmgray">
             {loading ? "Loading…" : `${activeOrders.length} active · ${completedOrders.length} done`}
@@ -560,8 +653,8 @@ export default function Dashboard() {
                 Mark Printed
               </button>
               <button className="btn-primary" onClick={openPrint}
-                disabled={customerCount === 0 && stockCount === 0}>
-                Print Sheet →
+                disabled={(customerCount === 0 && stockCount === 0) || downloadingSheet}>
+                {downloadingSheet ? "Generating…" : "Download Print Sheet"}
               </button>
             </div>
           </div>
@@ -631,7 +724,7 @@ export default function Dashboard() {
                       <div>
                         <span className="font-serif text-navy">{o.firstName}</span>
                         <span className="text-warmgray text-sm ml-2">
-                          · {o.package}-pack · {formatDisplay(o.phone)}
+                          · {sheetOrderDetail(o)}
                         </span>
                       </div>
                       <button
@@ -685,7 +778,16 @@ export default function Dashboard() {
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
                 {awaitingShipment.map((o) => (
-                  <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
+                  <ShippedOrderCard
+                    key={o.id}
+                    order={o}
+                    onSheet={ordersOnSheet.has(o.id)}
+                    canAdd={canAddOrder(o)}
+                    onAdd={() => addOrderToSheet(o)}
+                    onRemove={() => removeOrderFromSheet(o.id)}
+                    onShip={markShipped}
+                    onDelete={() => setDeleteTarget(o)}
+                  />
                 ))}
               </div>
             )}
@@ -697,7 +799,79 @@ export default function Dashboard() {
                 </summary>
                 <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
                   {alreadyShipped.map((o) => (
-                    <ShippedOrderCard key={o.id} order={o} onShip={markShipped} onDelete={() => setDeleteTarget(o)} />
+                    <ShippedOrderCard
+                      key={o.id}
+                      order={o}
+                      onSheet={ordersOnSheet.has(o.id)}
+                      canAdd={canAddOrder(o)}
+                      onAdd={() => addOrderToSheet(o)}
+                      onRemove={() => removeOrderFromSheet(o.id)}
+                      onShip={markShipped}
+                      onDelete={() => setDeleteTarget(o)}
+                    />
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+
+          {/* Wedding orders — guests at an active wedding event. Prepaid by the
+              couple, no phone/SMS, and kept out of the market wait estimate. */}
+          <div className="mt-10 pt-6 border-t-2 border-dashed border-bordercream">
+            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <h2 className="font-serif text-2xl text-navy">Wedding Orders</h2>
+                <p className="text-xs text-warmgray uppercase tracking-widest">
+                  Event guests · does not affect market wait time
+                </p>
+              </div>
+              <Link href="/dashboard/wedding" className="text-[10px] uppercase tracking-widest text-gold hover:text-navy">
+                Event Settings →
+              </Link>
+            </div>
+
+            {weddingOrders.length === 0 ? (
+              <p className="text-sm text-warmgray italic">
+                No wedding orders yet. Turn on wedding mode in Event Settings to open the guest page.
+              </p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {activeWeddingOrders.map((o) => (
+                  <WeddingOrderCard
+                    key={o.id}
+                    order={o}
+                    onSheet={ordersOnSheet.has(o.id)}
+                    canAdd={canAddOrder(o)}
+                    onAdd={() => addOrderToSheet(o)}
+                    onRemove={() => removeOrderFromSheet(o.id)}
+                    onReady={() => markReady(o)}
+                    onPickedUp={() => markPickedUp(o)}
+                    onArchive={() => archiveOrder(o)}
+                    onDelete={() => setDeleteTarget(o)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {doneWeddingOrders.length > 0 && (
+              <details className="mt-4">
+                <summary className="text-xs text-warmgray uppercase tracking-widest cursor-pointer">
+                  Picked Up ({doneWeddingOrders.length})
+                </summary>
+                <div className="grid sm:grid-cols-2 gap-3 mt-3 opacity-90">
+                  {doneWeddingOrders.map((o) => (
+                    <WeddingOrderCard
+                      key={o.id}
+                      order={o}
+                      onSheet={ordersOnSheet.has(o.id)}
+                      canAdd={canAddOrder(o)}
+                      onAdd={() => addOrderToSheet(o)}
+                      onRemove={() => removeOrderFromSheet(o.id)}
+                      onReady={() => markReady(o)}
+                      onPickedUp={() => markPickedUp(o)}
+                      onArchive={() => archiveOrder(o)}
+                      onDelete={() => setDeleteTarget(o)}
+                    />
                   ))}
                 </div>
               </details>
@@ -850,11 +1024,14 @@ function OrderCard({
       </div>
       <div className="grid grid-cols-3 gap-1 mt-2">
         {order.photos.slice(0, 9).map((p, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={i} src={p} alt=""
-            className={`${photoAspect} w-full object-cover rounded border border-bordercream`}
-          />
+          <div key={i}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p} alt=""
+              className={`${photoAspect} w-full object-cover rounded border border-bordercream`}
+            />
+            <OriginalLink order={order} index={i} />
+          </div>
         ))}
       </div>
       <div className="flex flex-wrap gap-2 mt-3 items-center">
@@ -904,7 +1081,7 @@ function ArchivedOrderCard({
 }: {
   order: Order; onUnarchive: () => void; onDelete: () => void;
 }) {
-  const isShipped = order.orderType === "shipped";
+  const isShipped = order.orderType === "shipped" || order.orderType === "gallery_order";
   const name = isShipped ? [order.firstName, order.lastName].filter(Boolean).join(" ") : order.firstName;
   return (
     <article className="parlor-card p-2.5" style={{ borderLeft: "4px solid #6B6058" }}>
@@ -922,8 +1099,11 @@ function ArchivedOrderCard({
       {order.photos.length > 0 && (
         <div className="grid grid-cols-3 gap-1 mt-2">
           {order.photos.slice(0, 9).map((p, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
+            <div key={i}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
+              <OriginalLink order={order} index={i} />
+            </div>
           ))}
         </div>
       )}
@@ -943,9 +1123,11 @@ function ArchivedOrderCard({
 }
 
 function ShippedOrderCard({
-  order, onShip, onDelete,
+  order, onSheet, canAdd, onAdd, onRemove, onShip, onDelete,
 }: {
   order: Order;
+  onSheet: boolean; canAdd: boolean;
+  onAdd: () => void; onRemove: () => void;
   onShip: (o: Order, tracking: string) => Promise<void>;
   onDelete: () => void;
 }) {
@@ -953,8 +1135,16 @@ function ShippedOrderCard({
   const [busy, setBusy] = useState(false);
   const addr = parseAddress(order.shippingAddress);
   const isShipped = order.status === "shipped";
+  const isGallery = order.orderType === "gallery_order";
   const fullName = [order.firstName, order.lastName].filter(Boolean).join(" ");
   const shipDollars = order.shippingRate != null ? order.shippingRate.toFixed(2) : "6.99";
+  // Gallery orders have a variable magnet count (one per selected photo) priced
+  // at $8 each / 3 for $20; shop orders are fixed 3- or 9-packs.
+  const magnetCount = isGallery ? order.photos.length : order.package === "9" ? 9 : 3;
+  const countLabel = `${magnetCount} Magnet${magnetCount === 1 ? "" : "s"}`;
+  const priceLabel = isGallery
+    ? `$${(galleryMagnetTotalCents(magnetCount) / 100).toFixed(2)}`
+    : priceForPackage(order.package);
 
   async function doShip() {
     const t = tracking.trim();
@@ -978,6 +1168,15 @@ function ShippedOrderCard({
       <div className="flex items-baseline justify-between gap-2">
         <p className="font-serif text-navy text-lg">{fullName || order.firstName}</p>
         <div className="flex gap-1 items-center">
+          {isGallery && (
+            <span
+              className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
+              style={{ background: "#A07848", color: "#FFFAF4" }}
+              title="Ordered from a wedding gallery"
+            >
+              Gallery
+            </span>
+          )}
           <span
             className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
             style={{ background: "#6B8E5A", color: "#FFFAF4" }}
@@ -1011,16 +1210,42 @@ function ShippedOrderCard({
       </div>
 
       <p className="text-xs text-warmgray mt-2">
-        {order.package === "9" ? "9 Magnets" : "3 Magnets"} ·{" "}
-        <span className="text-gold font-serif">{priceForPackage(order.package)}</span> + ${shipDollars} shipping ·{" "}
+        {countLabel} ·{" "}
+        <span className="text-gold font-serif">{priceLabel}</span> + ${shipDollars} shipping ·{" "}
         {timeAgo(order.createdAt)}
       </p>
 
       <div className="grid grid-cols-3 gap-1 mt-2">
         {order.photos.slice(0, 9).map((p, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
+          <div key={i}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
+            <OriginalLink order={order} index={i} />
+          </div>
         ))}
+      </div>
+
+      {/* Online orders print on the same sheet as market orders — the magnets
+          are identical, only the fulfillment differs. Unlike market pickups,
+          the button stays available at every status: parcels get lost and
+          magnets arrive damaged, and a reprint shouldn't need un-shipping the
+          order. Reprinting a shipped order leaves it shipped. */}
+      <div className="flex flex-wrap gap-2 mt-3 items-center">
+        {!onSheet && (
+          <button
+            onClick={onAdd}
+            disabled={!canAdd}
+            title={canAdd ? (isShipped ? "Reprint these magnets — the order stays shipped" : undefined) : addBlockedReason(magnetCount)}
+            className="btn-outline text-sm py-1 px-3 disabled:opacity-40"
+          >
+            Add to Sheet
+          </button>
+        )}
+        {onSheet && (
+          <button onClick={onRemove} className="btn-outline text-sm py-1 px-3">
+            Remove from Sheet
+          </button>
+        )}
       </div>
 
       {isShipped ? (
@@ -1044,10 +1269,114 @@ function ShippedOrderCard({
 
       <button
         onClick={onDelete}
-        className="block mx-auto mt-2 text-xs text-warmgray hover:text-red-700 underline-offset-2 hover:underline"
+        disabled={onSheet}
+        title={onSheet ? "Remove from print sheet first" : "Delete this order"}
+        className="block mx-auto mt-2 text-xs text-warmgray hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed underline-offset-2 hover:underline disabled:no-underline"
       >
         Delete
       </button>
+    </article>
+  );
+}
+
+// Why "Add to Sheet" is greyed out. Online orders can hold any number of photos
+// (a gallery order is one magnet per selected photo), so "too big for one sheet"
+// is a real case here in a way it never is for a fixed 3- or 9-pack.
+function addBlockedReason(magnetCount: number): string {
+  if (magnetCount > SLOTS) {
+    return `${magnetCount} photos don't fit on one ${SLOTS}-slot sheet.`;
+  }
+  return `Not enough empty slots — this order needs ${magnetCount}. Print or clear the current sheet first.`;
+}
+
+function WeddingOrderCard({
+  order, onSheet, canAdd, onAdd, onRemove, onReady, onPickedUp, onArchive, onDelete,
+}: {
+  order: Order; onSheet: boolean; canAdd: boolean;
+  onAdd: () => void; onRemove: () => void; onReady: () => void; onPickedUp: () => void;
+  onArchive: () => void; onDelete: () => void;
+}) {
+  const s = statusLabel(order.status);
+  const borderColor =
+    order.status === "ready" ? "#8B5E3C"
+    : order.status === "picked_up" ? "#6B6058"
+    : order.status === "pending" ? "#2B3856"
+    : "#A07848";
+  const photo = order.photos[0];
+
+  return (
+    <article className="parlor-card p-3" style={{ borderLeft: `4px solid ${borderColor}` }}>
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-gold" aria-hidden>♥</span>
+          <span className="font-serif text-navy text-lg">{order.firstName}</span>
+        </div>
+        <div className="flex gap-1 items-center">
+          {typeof order.tipAmount === "number" && order.tipAmount > 0 && (
+            <span
+              className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
+              style={{ background: "#A07848", color: "#FFFAF4" }}
+              title="Guest left a tip"
+            >
+              Tip ${order.tipAmount.toFixed(2)}
+            </span>
+          )}
+          <span
+            className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
+            style={{ background: s.color, color: "#FFFAF4" }}
+          >
+            {s.label}
+          </span>
+        </div>
+      </div>
+      <p className="text-xs text-warmgray mt-0.5">{timeAgo(order.createdAt)}</p>
+
+      {photo && (
+        <div className="mt-2 aspect-square w-full max-w-[9rem] mx-auto">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photo} alt="" className="w-full h-full object-cover rounded border border-bordercream" />
+        </div>
+      )}
+      {photo && <OriginalLink order={order} index={0} />}
+
+      <div className="flex flex-wrap gap-2 mt-3 items-center">
+        {!onSheet && order.status !== "ready" && order.status !== "picked_up" && (
+          <button onClick={onAdd} disabled={!canAdd}
+            className="btn-outline text-sm py-1 px-3 disabled:opacity-40">
+            Add to Sheet
+          </button>
+        )}
+        {onSheet && (
+          <button onClick={onRemove} className="btn-outline text-sm py-1 px-3">
+            Remove from Sheet
+          </button>
+        )}
+        {order.status !== "ready" && order.status !== "picked_up" && (
+          <button onClick={onReady} className="btn-gold text-sm py-1 px-3">
+            Mark Ready
+          </button>
+        )}
+        {order.status === "ready" && (
+          <button onClick={onPickedUp} className="btn-primary text-sm py-1 px-3">
+            Picked Up
+          </button>
+        )}
+        <button
+          onClick={onArchive}
+          title="Move out of the active queue (keeps the order)"
+          className="ml-auto text-xs text-warmgray hover:text-navy underline-offset-2 hover:underline"
+        >
+          Archive
+        </button>
+        <button
+          onClick={onDelete}
+          disabled={onSheet}
+          title={onSheet ? "Remove from print sheet first" : "Delete this order"}
+          className="text-xs text-warmgray hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed underline-offset-2 hover:underline disabled:no-underline"
+        >
+          Delete
+        </button>
+      </div>
     </article>
   );
 }
@@ -1404,15 +1733,31 @@ function DeleteOrderModal({
   onConfirm: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const isWedding = order.orderType === "wedding";
+  const isGallery = order.orderType === "gallery_order";
+  const galleryCount = order.photos.length;
   const isStripePaid = order.paymentMethod === "stripe" && order.paymentStatus === "paid";
-  const paymentLabel =
-    order.paymentMethod === "stripe"
+  const paymentLabel = isWedding
+    ? "Prepaid by couple (event package)"
+    : order.paymentMethod === "stripe"
       ? "Paid by card (Stripe)"
       : order.paymentStatus === "cash_pending"
       ? "Awaiting cash payment"
       : order.paymentStatus === "cash_confirmed"
       ? "Cash received"
       : "Cash (legacy)";
+  const packageLabel = isWedding
+    ? "Wedding magnet"
+    : isGallery
+    ? `Gallery order · ${galleryCount} magnet${galleryCount === 1 ? "" : "s"}`
+    : order.package === "9"
+    ? "9 Magnets"
+    : "3 Magnets";
+  const amountLabel = isWedding
+    ? "No charge"
+    : isGallery
+    ? `$${(galleryMagnetTotalCents(galleryCount) / 100).toFixed(2)} + shipping`
+    : `${priceForPackage(order.package)}.00`;
 
   async function doDelete() {
     setBusy(true);
@@ -1438,9 +1783,9 @@ function DeleteOrderModal({
           <dt className="text-xs uppercase tracking-widest text-warmgray self-baseline">Customer</dt>
           <dd className="font-serif text-navy">{order.firstName}</dd>
           <dt className="text-xs uppercase tracking-widest text-warmgray self-baseline">Package</dt>
-          <dd className="text-charcoal">{order.package === "9" ? "9 Magnets" : "3 Magnets"}</dd>
+          <dd className="text-charcoal">{packageLabel}</dd>
           <dt className="text-xs uppercase tracking-widest text-warmgray self-baseline">Amount</dt>
-          <dd className="text-charcoal">{priceForPackage(order.package)}.00</dd>
+          <dd className="text-charcoal">{amountLabel}</dd>
           <dt className="text-xs uppercase tracking-widest text-warmgray self-baseline">Payment</dt>
           <dd className="text-charcoal">{paymentLabel}</dd>
         </dl>

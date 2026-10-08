@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import Cropper from "react-easy-crop";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
-import { getCroppedImg, type CropArea } from "@/lib/cropImage";
+import { getSourceImg } from "@/lib/cropImage";
+import { CropStep, isTooSmallToPrint, type PickedImage } from "../CropStep";
 import { priceDollars, type PackageKey } from "@/lib/pricing";
 
 type Stage = "landing" | "details" | "package" | "photos" | "cropping" | "review" | "payment" | "confirm";
@@ -51,6 +51,9 @@ export default function ShopPage() {
   // Step 3 — photos
   const [photos, setPhotos] = useState<Blob[]>([]);
   const [thumbs, setThumbs] = useState<string[]>([]);
+  // Uncropped copy of each photo (index-aligned with `photos`), uploaded so a
+  // bad crop can be redone later. null if it couldn't be made — never blocks.
+  const [sources, setSources] = useState<(Blob | null)[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,14 +64,10 @@ export default function ShopPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cropping state (always square)
-  const [pendingSrc, setPendingSrc] = useState<string | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [cropAreaPx, setCropAreaPx] = useState<CropArea | null>(null);
-
-  const onCropComplete = useCallback((_: CropArea, areaPx: CropArea) => {
-    setCropAreaPx(areaPx);
-  }, []);
+  // Photo picked and awaiting its crop/fit step.
+  const [pending, setPending] = useState<PickedImage | null>(null);
+  // Square magnets get Fill/Fit + the 720px floor; 2x3 keeps the plain cropper.
+  const square = true;
 
   const goToPackage = () => {
     if (!firstName.trim()) return setError("Please enter your first name.");
@@ -86,6 +85,7 @@ export default function ShopPage() {
     setError(null);
     // Trim any extra photos if the customer reduced the package size.
     setPhotos((p) => p.slice(0, maxPhotos));
+    setSources((s) => s.slice(0, maxPhotos));
     setThumbs((t) => {
       t.slice(maxPhotos).forEach((u) => URL.revokeObjectURL(u));
       return t.slice(0, maxPhotos);
@@ -99,36 +99,42 @@ export default function ShopPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setPendingSrc(reader.result as string);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setCropAreaPx(null);
-      setStage("cropping");
+      const src = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const picked = { src, width: img.naturalWidth, height: img.naturalHeight };
+        if (isTooSmallToPrint(picked, square)) {
+          return setError("That photo is too small to print sharp. Please choose a different one.");
+        }
+        setError(null);
+        setPending(picked);
+        setStage("cropping");
+      };
+      img.onerror = () => setError("Could not open that photo. Try another.");
+      img.src = src;
     };
     reader.readAsDataURL(file);
   };
 
-  const confirmCrop = async () => {
-    if (!pendingSrc || !cropAreaPx) return;
-    try {
-      const blob = await getCroppedImg(pendingSrc, cropAreaPx, { maxW: 1200, maxH: 1200 });
-      const url = URL.createObjectURL(blob);
-      setPhotos((p) => [...p, blob]);
-      setThumbs((t) => [...t, url]);
-      setPendingSrc(null);
-      setStage("photos");
-    } catch {
-      setError("Could not process that photo. Try another.");
-    }
+  const confirmCrop = async (blob: Blob) => {
+    if (!pending) return;
+    const url = URL.createObjectURL(blob);
+    const source = await getSourceImg(pending.src).catch(() => null);
+    setPhotos((p) => [...p, blob]);
+    setSources((s) => [...s, source]);
+    setThumbs((t) => [...t, url]);
+    setPending(null);
+    setStage("photos");
   };
 
   const cancelCrop = () => {
-    setPendingSrc(null);
+    setPending(null);
     setStage("photos");
   };
 
   const removePhoto = (idx: number) => {
     setPhotos((p) => p.filter((_, i) => i !== idx));
+    setSources((s) => s.filter((_, i) => i !== idx));
     setThumbs((t) => {
       URL.revokeObjectURL(t[idx]);
       return t.filter((_, i) => i !== idx);
@@ -166,6 +172,7 @@ export default function ShopPage() {
         JSON.stringify({ street: street.trim(), city: city.trim(), state: stateCode, zip: zip.trim() })
       );
       photos.forEach((b, i) => form.append("photos", b, `photo-${i}.jpg`));
+      sources.forEach((b, i) => { if (b) form.append(`source-${i}`, b, `photo-${i}-source.jpg`); });
       const res = await fetch("/api/orders", { method: "POST", body: form });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Submission failed");
@@ -299,21 +306,16 @@ export default function ShopPage() {
           </section>
         )}
 
-        {stage === "cropping" && pendingSrc && (
+        {stage === "cropping" && pending && (
           <section className="w-full">
-            <Header subtitle="Crop to Square" />
-            <div className="parlor-card mt-6 overflow-hidden">
-              <div className="relative w-full bg-charcoal" style={{ height: 360 }}>
-                <Cropper image={pendingSrc} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={onCropComplete} showGrid />
-              </div>
-              <div className="p-4 space-y-3">
-                <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full" aria-label="Zoom" />
-                <div className="flex gap-2">
-                  <button className="btn-outline flex-1" onClick={cancelCrop}>Cancel</button>
-                  <button className="btn-primary flex-1" onClick={confirmCrop}>Use Photo</button>
-                </div>
-              </div>
-            </div>
+            <Header subtitle="Fit or Crop" />
+            <CropStep
+              key={pending.src}
+              image={pending}
+              square={square}
+              onConfirm={confirmCrop}
+              onCancel={cancelCrop}
+            />
           </section>
         )}
 

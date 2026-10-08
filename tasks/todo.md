@@ -1,52 +1,199 @@
-# Tasks: SMS Consent + Online Shop
+# Tasks: Crop defaults revision + 2x3 resolution floor, then commit
 
-## Feature 1 — SMS Consent + Twilio (Twilio send already built in /api/notify)
-- [ ] db: add `smsConsent` boolean column to orders (+ type)
-- [ ] /order: required consent checkbox after phone, block Continue until checked
-- [ ] /order: send smsConsent in submitOrder FormData
-- [ ] /api/orders POST: parse + store smsConsent
-- [ ] dashboard: notify alert copy → "SMS failed — notify customer manually"
+## Change (user correction to the 0.80–1.25 auto-select)
+- [x] Remove ratio-band auto-select. Default is always FILL…
+- [x] …except extreme ratios (< 0.6 or > 1.67) → FIT auto-selects (note shown)
+- [x] FIT shown side by side with FILL as an option: two tiles, each with a live
+      thumbnail (Fill = current crop via CroppedImage, Fit = rendered fit image);
+      tapping a tile switches the large preview. Fit is pre-rendered for this.
+- [x] Keep: short edge < 720 → FIT forced, Fill disabled
+- [x] 2x3: add the 720px floor, no Fit mode:
+      - zoom capped so the 2:3 crop's short side (width) never drops under 720
+      - upload rejected if no 2:3 crop of width ≥ 720 fits (min(w, h·2/3) < 720)
+- [x] Commit everything (branch claude/magnet-parlor-system-JBzAG); ignore
+      `*.tsbuildinfo`; public/uploads already gitignored
 
-## Feature 2 — Online Shop /shop (shipped orders)
-- [ ] db: add orderType, lastName, email, shippingAddress(JSON), shippingRate, trackingNumber columns (+ types)
-- [ ] pricing: SHIPPING_CENTS=699, shippedTotalCents()
-- [ ] /api/create-payment-intent: support shipping (package + $6.99)
-- [ ] /api/orders POST: branch on orderType=shipped (validate name/email/address, amount incl shipping, phone optional)
-- [ ] app/shop/page.tsx: 6-step flow (details → package → crop → review → Stripe → confirm)
-- [ ] /api/ship POST: set trackingNumber + status=shipped, SendGrid email to customer
-- [ ] dashboard: separate "Online Orders" section, Mark Shipped + tracking input, exclude shipped from market queue/print
-- [ ] homepage: hero/section link + nav "Order Online"
-- [ ] .env.example unchanged (creds already present)
+## Verify
+- [x] build; 4:3 photo → FILL; 1604x2048 (0.78) → FILL with Fit tile beside it;
+      1000x2000 (0.5) → FIT auto; 1500x700 → FIT forced; 2x3 zoom stops at
+      width 720; 2x3 too-small rejected; print sheet 2550x3300
 
-## Verify & Deploy
-- [ ] npm run build passes
-- [ ] commit on branch, deploy to VPS, preserve .env (do NOT rotate dashboard password)
+## Results (Playwright, 390px viewport)
+- 4032x3024 (1.33) → FILL · 1604x2048 (0.78) → FILL · 1000x2000 (0.50) → FIT
+  auto + note · 2400x1200 (2.00) → FIT auto + note · 1500x700 → FIT forced,
+  Fill disabled. Fill + Fit tiles with live thumbnails shown side by side on
+  every square photo.
+- 2x3: no Fit tiles; 700x1200 and 2000x1000 rejected "too small"; 1200x1800
+  slider max 1.66, End + wheel zoom stop there → output 723x1084 (≥ 720 wide).
+- Zero page errors. Print sheet code untouched.
 
-## Dashboard improvements (round 2)
-- [x] Clickable prominent phone on order cards (sms: link, near top of card)
-- [x] Estimated wait on /order confirm (server returns ordersAhead = market
-      pending/printing; ~5min/order, min 5-10, "first/next" copy)
-- [x] Archive status: Archive/Unarchive buttons, collapsed Archived section,
-      excluded from active queue + wait time + batch hopper
-- [x] Market Queue vs Online Orders cleanly separated/labeled (market primary,
-      online moved to secondary section at bottom of right panel)
-- [x] build passes; deploy
+---
 
-## Review (round 1)
-- SMS: Twilio send was already built in /api/notify (exact message). Added required
-  consent checkbox on /order (blocks Continue), `smsConsent` boolean column + storage,
-  and updated operator alert to "SMS failed — notify customer manually".
-- Shop: new /shop 6-step flow (details w/ US-state dropdown → package+shipping → square
-  crop → review → Stripe-only → confirm). New DB columns orderType/lastName/email/
-  shippingAddress(JSON)/shippingRate/trackingNumber. create-payment-intent + /api/orders
-  POST validate package + $6.99 shipping for shipped orders; phone optional, name/email/
-  address required.
-- Dashboard: separate "Online Orders" section (full name, email, address, package, paid
-  badge, photos) with Mark Shipped + tracking input → /api/ship updates status + emails
-  customer via SendGrid (skips gracefully if unconfigured). Shipped orders excluded from
-  market queue + print sheet.
-- Home: "Order Online — We Ship Nationwide" hero CTA + nav link (desktop + mobile).
-- `npm run build` passes (13 routes incl. /shop, /api/ship). DB migrations are additive
-  ALTER TABLEs — preserve existing prod data.
-</content>
-</invoke>
+# Tasks: FILL / FIT crop modes + resolution floor (/order + /shop)
+
+## Problem
+(a) Only square FILL crops — a tall sports poster loses its team/athlete name.
+(b) No resolution floor — 67/351 photos (19%) were < 720px and got upscaled.
+
+## Geometry (from lib/printSheetImage.ts)
+2x2 cell = 2.4in = 720px @300DPI; die-safe = 2.0in = 600px. Output square S
+(720..1200) maps 1:1 onto the cell, so the print sheet needs no change.
+
+## Plan
+- [x] `lib/cropImage.ts` (pure helpers, shared):
+  - `defaultCropMode(w,h)` → "fit" outside aspect 0.80–1.25, else "fill"
+  - `fillMaxZoom(w,h,sliderMax)` → zoom where the crop's side hits 720px
+    (react-easy-crop at zoom 1 = short edge), capped at the existing 3
+  - `getFitImg(src)` → S×S JPEG, S = clamp(longEdge·720/600, 720, 1200);
+    photo scaled into the centred S·600/720 die-safe square; every pixel
+    outside the photo = nearest photo edge pixel (clamped sample = outermost
+    row/column extended, corners from corner pixel); that region then blended
+    with a ~9px (@720, scaled with S) gaussian (3× box approx — no ctx.filter,
+    iOS Safari lacks it) through a feathered mask that is 0 on the photo, so
+    the photo itself is never blurred
+- [x] `app/CropStep.tsx` (new, shared by /order + /shop): Fill/Fit segmented
+  toggle + live preview of the active mode (Cropper for Fill; rendered FIT
+  image w/ faint dashed magnet-edge guide for Fit). Fit = no zoom/pan.
+  Toggle shown prominently w/ a one-line note when auto-defaulted to Fit.
+  Fill = today's cropper, slider/pinch capped by `fillMaxZoom`.
+  If short edge < 720, Fill can't reach 720 at any zoom → Fill disabled, Fit used.
+- [x] Upload floor: on pick, read natural size; long edge < 720 → "too small to
+  print sharp, pick another" message on the photos step, no crop screen
+- [x] /order + /shop use CropStep; source copy upload kept as is
+- [x] 2x3 market size: unchanged (FILL only, no floor) — the spec is square-only
+
+## Must NOT change
+- Print sheet builder, pricing, dashboard, /wedding single-photo flow
+
+## Verify
+- [x] `npm run build`
+- [x] 1604x2048 poster → defaults FIT; output shows the whole poster, no crop,
+      no gray band/border (pixel-check the extension region vs edge colours)
+- [x] Square-ish photo → defaults FILL, same cropper/output as before
+- [x] FILL max zoom → crop ≥ 720×720
+- [x] Image with long edge < 720 → rejected at upload
+- [x] Print sheet download still 2550×3300
+
+## Verification results (Playwright, real Chromium, 390px phone viewport)
+- 1604x2048 poster → FIT default, no zoom slider; output 1200x1200, photo
+  783x1000 centred in the 1000px safe area; bleed pixels within 6 levels of the
+  photo's edge colour on every sampled row, min saturation 54 (no gray band).
+  Visually: whole poster, EAGLES + J. SMITH intact, no visible border.
+- 3000x3000 → FILL, slider max 3 (same as before), 1200x1200 output.
+- 1000x900 → FILL, slider max 1.25; slider End + 15 wheel-zoom ticks both stop
+  at 1.25 → output exactly 720x720.
+- 700x500 → "too small to print sharp" on the photos step, no crop screen.
+- 1500x700 (short edge < 720) → FIT, Fill disabled.
+- Fit↔Fill toggle switches previews both ways.
+- /order cash order (2 FIT + 1 FILL) → source copies still uploaded; print
+  sheet 2550x3300, posters print whole. Zero page/console errors. Test data removed.
+
+## Deploy
+- [x] deploy.py → DEPLOY SUCCESS. .env 12 keys preserved, DASHBOARD_PASSWORD
+      not rotated, 136 upload dirs untouched; live /shop + /order chunks carry
+      the Fit/Fill UI; /, /shop, /order, /wedding 200, /dashboard 307 (login).
+
+---
+
+# Tasks: Keep an uncropped "source" copy of every customer photo
+
+## Problem
+Only the cropped square is uploaded, so a badly-cropped order is unrecoverable.
+(Exception: /wedding already sends the raw camera file to `originals/` for the
+couple's gallery — that path stays exactly as is.)
+
+## Plan
+- [x] `lib/cropImage.ts`: add `getSourceImg(src)` — full uncropped image,
+      long edge ≤ 2000px, JPEG q0.88 (never upscales)
+- [x] /order, /shop, /wedding: in `confirmCrop`, build the source from the same
+      picked image and keep it in a `sources` array parallel to `photos`
+      (add/remove/trim in lockstep). Source failure never blocks the crop.
+- [x] Submit: append each source as its own field `source-<i>` (index-keyed, so
+      a missing one can't shift the others) named `photo-<i>-source.jpg`
+- [x] `POST /api/orders`: for each photo i, if `source-<i>` is a JPEG File
+      (≤ 15MB) write `photo-<i+1>-source.jpg` in the same order folder. Optional
+      — absent/invalid sources are skipped silently. No DB change.
+- [x] `GET /api/orders`: add derived `sourcePhotos: (string|null)[]` per order
+      (filename convention + exists-on-disk check), so the dashboard never
+      links to a 404 for pre-change orders
+- [x] Dashboard: small "Original" link (new tab) under each photo that has a
+      source — market, archived, online (shipped), wedding cards
+
+## Must NOT change
+- Crop UI, crop output (size/quality), print sheet, pricing, wedding originals,
+  gallery, order validation (photo count etc.)
+
+## Verify
+- [x] `npm run build` passes
+- [ ] Test /shop order (local, Stripe test mode): photo-N.jpg + photo-N-source.jpg
+      in the folder; source is full-frame (non-square, matches original aspect)
+- [ ] Pre-change order renders in dashboard with no Original link, no broken
+      image, and still adds to the print sheet without errors
+
+## Deploy
+- [x] `python .claude/deploy/deploy.py` → DEPLOY SUCCESS. .env preserved (12 keys,
+      DASHBOARD_PASSWORD not rotated), 136 upload dirs untouched. Prod
+      /api/orders: all 136 orders carry `sourcePhotos`, all null (pre-change) →
+      no Original links, dashboard 200. Live client chunks contain the upload.
+
+---
+
+# Tasks: Add to Sheet for Online Orders (shipped + gallery_order)
+
+## Problem
+Online Orders cards (`ShippedOrderCard`) had no way to put their photos on the
+Print Sheet Builder — only market and wedding cards did. Their magnets couldn't
+be printed from the dashboard.
+
+## Plan
+- [x] `ShippedOrderCard` gains `onSheet` / `canAdd` / `onAdd` / `onRemove` props
+- [x] Render "Add to Sheet" / "Remove from Sheet" using the same pattern as the
+      market + wedding cards (same button classes, same disabled behavior)
+- [x] Disable Delete while the order is on the sheet (matches other cards; also
+      matches the server, which 409s a DELETE on a `printing` order)
+- [x] Wire both call sites (awaiting-shipment grid + collapsed "Shipped" grid)
+- [x] Hide Add for already-shipped orders (mirrors ready/picked_up on market)
+- [x] "On this sheet" list: label online orders as magnet count + online/gallery
+      instead of "N-pack · <empty phone>"
+
+## Must NOT change
+- [x] Online orders stay out of `marketOrders` / the wait estimate — the count is
+      server-side (`orderType = 'market'` in app/api/orders), proven unchanged
+      with both online orders forced to `printing`
+- [x] Online orders stay in their own Online Orders dashboard section
+- [x] `/api/ship` ignores status — a `printing` online order still ships (tested)
+
+## Verify
+- [x] `tsc --noEmit` + `npm run build` clean
+- [x] Playwright against `next start`: seeded a 3-photo shipped + 2-photo gallery
+      order, both Add buttons enabled, sheet filled SHIPIA×3 / GALE×2 with the
+      per-order colour name label under each photo
+- [x] Download Print Sheet → PNG exactly 2550×3300 with both orders rendered
+- [x] Remove from Sheet clears only that order; Delete disables/re-enables with it
+- [x] No console/page errors; seed rows + scratch files removed afterwards
+
+## Deploy
+- [x] `python .claude/deploy/deploy.py` → DEPLOY SUCCESS, pm2 magnet-parlor online,
+      https://themagnetparlor.com 200
+- [x] .env preserved (all 12 keys present), data/ + public/uploads untouched
+      (45 upload dirs, 45 orders, 3 galleries), email-agent pm2 app untouched
+
+## Review
+- Single-file change (app/dashboard/page.tsx) plus CHANGES.md/todo.md. No API,
+  DB, pricing, or wait-estimate changes — online orders gained a button and
+  nothing else about their handling moved.
+- Known limit, deliberate: a gallery order with more than 9 photos can't be
+  placed (one sheet holds 9). The Add button greys out with a tooltip saying so
+  rather than silently half-filling and losing track of what already printed.
+  Ask if partial/multi-sheet placement is wanted.
+## Follow-up: reprints on shipped orders (done)
+- [x] Add to Sheet stays available on shipped/gallery orders at every status —
+      lost parcels and damaged magnets need a reprint path that isn't
+      "un-ship the order". Market cards still hide it at ready/picked_up.
+- [x] `markSheetPrinted()` skips `shipped` orders, so a reprint can't rewind
+      fulfillment (it would otherwise drop back into "awaiting shipment" and
+      hide the tracking number). Other orders on the same sheet still advance.
+- [x] Verified: shipped seeds reprint and stay shipped w/ tracking; mixed sheet
+      advances only the market order; wait estimate still market-only
+- [x] Deployed; .env preserved, dashboard password NOT rotated
+- 9+ photo grey-out left exactly as it was, per your call.

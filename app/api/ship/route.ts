@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     | OrderRow
     | undefined;
   if (!row) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  if (row.orderType !== "shipped") {
+  if (row.orderType !== "shipped" && row.orderType !== "gallery_order") {
     return NextResponse.json({ error: "Order is not a shipped order" }, { status: 400 });
   }
 

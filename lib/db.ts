@@ -45,6 +45,21 @@ if (!global.__mp_db) {
       value TEXT NOT NULL
     );
     INSERT OR IGNORE INTO settings (key, value) VALUES ('activeMagnetSize', '2x2');
+    INSERT OR IGNORE INTO settings (key, value) VALUES ('weddingModeActive', 'false');
+    -- Wedding photo galleries. Each gallery is a 30-day snapshot of a finished
+    -- event: the couple's header text and the original (uncropped) guest photos.
+    -- The id is a non-guessable uuid used as the public /gallery/[id] slug.
+    CREATE TABLE IF NOT EXISTS galleries (
+      id TEXT PRIMARY KEY,
+      coupleDisplayText TEXT NOT NULL DEFAULT '',
+      eventDate TEXT NOT NULL DEFAULT '',
+      customSubtitle TEXT NOT NULL DEFAULT '',
+      photos TEXT NOT NULL DEFAULT '[]',
+      coupleEmail TEXT,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      expiresAt TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_galleries_createdAt ON galleries(createdAt);
     CREATE TABLE IF NOT EXISTS inquiries (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -118,6 +133,24 @@ if (!global.__mp_db) {
   if (!has("trackingNumber")) {
     db.exec(`ALTER TABLE orders ADD COLUMN trackingNumber TEXT`);
   }
+  // Optional tip left by a wedding guest for their magnet maker. tipAmount is in
+  // dollars (nullable = no tip); tipPaymentIntentId is the Stripe intent.
+  if (!has("tipAmount")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN tipAmount REAL`);
+  }
+  if (!has("tipPaymentIntentId")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN tipPaymentIntentId TEXT`);
+  }
+  // Gallery upsell orders link back to the gallery they were placed from.
+  if (!has("galleryId")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN galleryId TEXT`);
+  }
+  // Wedding uploads keep BOTH the square crop (in `photos`, used for printing)
+  // and the original uncropped photo (here, used for the couple's gallery).
+  // JSON array of paths; null for non-wedding and legacy wedding orders.
+  if (!has("originalPhotos")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN originalPhotos TEXT`);
+  }
   // Seed default categories on first init
   const catCount = (db.prepare("SELECT COUNT(*) as n FROM categories").get() as { n: number }).n;
   if (catCount === 0) {
@@ -153,7 +186,7 @@ export type MagnetSize = "2x2" | "2x3";
 
 export type PaymentMethod = "stripe" | "cash";
 export type PaymentStatus = "paid" | "cash_pending" | "cash_confirmed";
-export type OrderType = "market" | "shipped";
+export type OrderType = "market" | "shipped" | "wedding" | "gallery_order";
 
 export type ShippingAddress = {
   street: string;
@@ -184,10 +217,15 @@ export type OrderRow = {
   shippingAddress: string | null;
   shippingRate: number | null;
   trackingNumber: string | null;
+  tipAmount: number | null;
+  tipPaymentIntentId: string | null;
+  galleryId: string | null;
+  originalPhotos: string | null;
 };
 
-export type Order = Omit<OrderRow, "photos" | "smsConsent"> & {
+export type Order = Omit<OrderRow, "photos" | "smsConsent" | "originalPhotos"> & {
   photos: string[];
+  originalPhotos: string[];
   smsConsent: boolean;
 };
 
@@ -195,8 +233,33 @@ export function rowToOrder(r: OrderRow): Order {
   return {
     ...r,
     photos: JSON.parse(r.photos || "[]"),
+    originalPhotos: JSON.parse(r.originalPhotos || "[]"),
     smsConsent: Boolean(r.smsConsent),
   };
+}
+
+// ── Wedding photo galleries ──────────────────────────────────────────────────
+export type GalleryRow = {
+  id: string;
+  coupleDisplayText: string;
+  eventDate: string;
+  customSubtitle: string;
+  photos: string;
+  coupleEmail: string | null;
+  createdAt: string;
+  expiresAt: string;
+};
+
+export type Gallery = Omit<GalleryRow, "photos"> & { photos: string[] };
+
+export function rowToGallery(r: GalleryRow): Gallery {
+  return { ...r, photos: JSON.parse(r.photos || "[]") };
+}
+
+/** A gallery is live for 30 days from creation, then inaccessible. */
+export function isGalleryExpired(g: { expiresAt: string }): boolean {
+  const exp = new Date(g.expiresAt.replace(" ", "T") + "Z").getTime();
+  return Number.isFinite(exp) ? Date.now() > exp : false;
 }
 
 export type Category = {

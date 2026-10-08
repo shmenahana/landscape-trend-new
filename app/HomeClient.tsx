@@ -71,6 +71,7 @@ function Nav({
         <ul className="hidden md:flex items-center gap-7 text-sm tracking-widest uppercase">
           <li><a href="#about" className="text-charcoal hover:text-navy transition">About</a></li>
           <li><a href="#how" className="text-charcoal hover:text-navy transition">How It Works</a></li>
+          <li><Link href="/weddings" className="text-charcoal hover:text-navy transition">Weddings</Link></li>
           <li><a href="#events" className="text-charcoal hover:text-navy transition">Events</a></li>
           <li><a href="#pricing" className="text-charcoal hover:text-navy transition">Pricing</a></li>
           <li><a href="#contact" className="text-charcoal hover:text-navy transition">Book Us</a></li>
@@ -92,6 +93,7 @@ function Nav({
           <ul className="px-5 py-4 space-y-3 text-sm tracking-widest uppercase">
             <li><a href="#about" onClick={close}>About</a></li>
             <li><a href="#how" onClick={close}>How It Works</a></li>
+            <li><Link href="/weddings" onClick={close}>Weddings</Link></li>
             <li><a href="#events" onClick={close}>Events</a></li>
             <li><a href="#pricing" onClick={close}>Pricing</a></li>
             <li><a href="#contact" onClick={close}>Book Us</a></li>
@@ -237,6 +239,11 @@ function Events() {
             <article key={c.title} className="event-card reveal">
               <h3 className="font-serif text-2xl text-navy">{c.title}</h3>
               <p className="text-warmgray mt-3 leading-relaxed">{c.body}</p>
+              {c.title === "Weddings" && (
+                <Link href="/weddings" className="inline-block mt-4 text-gold uppercase tracking-widest text-xs hover:text-navy transition">
+                  See our wedding experience →
+                </Link>
+              )}
             </article>
           ))}
         </div>
@@ -274,6 +281,11 @@ function Pricing() {
               <p className="font-serif text-2xl text-navy">{t.title}</p>
               <div className="heart-divider my-6"><span>♥</span></div>
               <p className="text-warmgray leading-relaxed">{t.body}</p>
+              {t.title === "Weddings" && (
+                <Link href="/weddings" className="inline-block mt-4 text-gold uppercase tracking-widest text-xs hover:text-navy transition">
+                  See our wedding experience →
+                </Link>
+              )}
             </div>
           ))}
         </div>
