@@ -4,12 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import Cropper from "react-easy-crop";
 import {
   DIE_SAFE_PX,
+  FILL_MAX_ZOOM,
   PRINT_CELL_PX,
   canFill,
   defaultCropMode,
-  fillMaxZoom,
   getCroppedImg,
   getFitImg,
+  isSoftCrop,
   type CropArea,
   type CropMode,
 } from "@/lib/cropImage";
@@ -29,8 +30,9 @@ export function isTooSmallToPrint(img: { width: number; height: number }, square
 
 /**
  * Crop step shared by /order and /shop.
- *   FILL — the classic crop (pinch/drag), zoom capped so the crop's short side
- *          never drops under 720px. The default, and the only mode for 2x3.
+ *   FILL — the classic crop (pinch/drag), zoom to 3x. A crop under 720px is
+ *          upscaled to 720 on export, with a soft-print note — never blocked.
+ *          The default, and the only mode for 2x3.
  *   FIT  — square only: the whole photo inside the die-safe area, bleed filled
  *          from its own edges. No zoom/pan. Offered side by side with FILL;
  *          auto-selected only for extreme shapes, or forced when the photo is
@@ -44,7 +46,8 @@ export function CropStep({
 }: {
   image: PickedImage;
   square: boolean;
-  onConfirm: (blob: Blob) => void;
+  /** cropPx: the FILL crop's short side in source px; null for FIT. */
+  onConfirm: (blob: Blob, cropPx: number | null) => void;
   onCancel: () => void;
 }) {
   const { src, width, height } = image;
@@ -59,7 +62,9 @@ export function CropStep({
   const onCropComplete = useCallback((_: CropArea, areaPx: CropArea) => {
     setCropAreaPx(areaPx);
   }, []);
-  const maxZoom = fillMaxZoom(width, height, aspect);
+  // Short side of the live crop in source px (width, for 1:1 and 2:3 alike).
+  const cropPx = cropAreaPx ? Math.min(cropAreaPx.width, cropAreaPx.height * aspect) : null;
+  const soft = mode === "fill" && cropPx !== null && isSoftCrop(cropPx);
   // Fill tile thumbnail: the live crop, or (before the cropper has reported
   // one, e.g. when FIT was auto-selected) the centred zoom-1 square.
   const side = Math.min(width, height);
@@ -96,15 +101,20 @@ export function CropStep({
     try {
       if (mode === "fit") {
         if (!fit) return;
-        onConfirm(fit.blob);
+        onConfirm(fit.blob, null);
       } else {
-        if (!cropAreaPx) return;
+        if (!cropAreaPx || cropPx === null) return;
+        // react-easy-crop can report a square off by a pixel; trim it so a
+        // soft crop upscales to exactly 720x720.
+        const area = square ? { ...cropAreaPx, width: cropPx, height: cropPx } : cropAreaPx;
         const blob = await getCroppedImg(
           src,
-          cropAreaPx,
-          square ? { maxW: 1200, maxH: 1200 } : { maxW: 800, maxH: 1200 }
+          area,
+          square
+            ? { maxW: 1200, maxH: 1200, minW: PRINT_CELL_PX }
+            : { maxW: 800, maxH: 1200, minW: PRINT_CELL_PX }
         );
-        onConfirm(blob);
+        onConfirm(blob, Math.round(cropPx));
       }
     } catch {
       setError("Could not process that photo. Try another.");
@@ -124,7 +134,7 @@ export function CropStep({
             image={src}
             crop={crop}
             zoom={zoom}
-            maxZoom={maxZoom}
+            maxZoom={FILL_MAX_ZOOM}
             aspect={aspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
@@ -152,16 +162,23 @@ export function CropStep({
       </div>
       <div className="p-4 space-y-3">
         {mode === "fill" && (
-          <input
-            type="range"
-            min={1}
-            max={maxZoom}
-            step={0.01}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-full"
-            aria-label="Zoom"
-          />
+          <div>
+            <input
+              type="range"
+              min={1}
+              max={FILL_MAX_ZOOM}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="w-full"
+              aria-label="Zoom"
+            />
+            {soft && (
+              <p className="text-xs text-warmgray text-center mt-1" role="status">
+                Zoomed in this far, this photo will print a little soft.
+              </p>
+            )}
+          </div>
         )}
         {square && (
           <div>

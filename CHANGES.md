@@ -218,3 +218,18 @@ Agents: log every change here with timestamp, role, file, and what was done.
 - app/api/gallery/[id]/order: its own copy of the rules removed; backstop
   uses the shared fn.
 - app/gallery/[id]/page.tsx: intent body carries name/email/address.
+
+## 2026-10-18 — Zoom back to 3x; 720px floor is now a soft warning
+- lib/cropImage.ts: fillMaxZoom removed → FILL_MAX_ZOOM = 3 for every source;
+  isSoftCrop(); getCroppedImg takes optional minW (upscale narrow crops).
+- app/CropStep.tsx: slider/Cropper max 3x (square + 2x3). Crop < 720 source
+  px → "Zoomed in this far, this photo will print a little soft." (never
+  blocks); exported upscaled (square exactly 720x720, 2x3 720 wide).
+  onConfirm(blob, cropPx) — cropPx null for FIT.
+- app/order, app/shop, app/wedding: send cropPx-<i> per photo.
+- lib/db.ts: additive cropPx TEXT column (JSON, index-aligned with photos).
+- app/api/orders: stores cropPx (bad/missing → null; never rejects).
+- app/dashboard: "low res" badge under any photo with cropPx < 720.
+- Unchanged: forced FIT when short edge < 720, upload rejects, tiles,
+  auto-select bands, -source copies.
+

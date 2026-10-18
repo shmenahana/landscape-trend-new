@@ -37,6 +37,8 @@ export default function WeddingPage() {
   // Downscaled uncropped copy (≤2000px) saved next to the crop so a bad crop
   // can be redone. Separate from `original`, which feeds the gallery.
   const [source, setSource] = useState<Blob | null>(null);
+  // Crop short side in source px, for the dashboard's "low res" badge.
+  const [photoCropPx, setPhotoCropPx] = useState<number | null>(null);
   const [thumb, setThumb] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export default function WeddingPage() {
       if (thumb) URL.revokeObjectURL(thumb);
       setSource(await getSourceImg(pendingSrc).catch(() => null));
       setPhoto(blob);
+      setPhotoCropPx(Math.round(Math.min(cropAreaPx.width, cropAreaPx.height)));
       setThumb(URL.createObjectURL(blob));
       setPendingSrc(null);
       setStage("photo");
@@ -104,6 +107,7 @@ export default function WeddingPage() {
     if (thumb) URL.revokeObjectURL(thumb);
     setPhoto(null);
     setSource(null);
+    setPhotoCropPx(null);
     setThumb(null);
   };
 
@@ -117,6 +121,7 @@ export default function WeddingPage() {
       form.append("firstName", firstName.trim());
       form.append("photos", photo, "photo-0.jpg");
       if (source) form.append("source-0", source, "photo-0-source.jpg");
+      if (photoCropPx) form.append("cropPx-0", String(photoCropPx));
       // Send the uncropped original too, for the couple's gallery.
       if (original) {
         const oext = original.type === "image/png" ? "png"

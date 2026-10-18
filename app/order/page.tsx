@@ -38,6 +38,9 @@ export default function CustomerOrderPage() {
   // Uncropped copy of each photo (index-aligned with `photos`), uploaded so a
   // bad crop can be redone later. null if it couldn't be made — never blocks.
   const [sources, setSources] = useState<(Blob | null)[]>([]);
+  // FILL crop short side in source px per photo (null = FIT), for the
+  // dashboard's "low res" badge.
+  const [cropPxs, setCropPxs] = useState<(number | null)[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [magnetSize, setMagnetSize] = useState<MagnetSize>("2x2");
@@ -104,12 +107,13 @@ export default function CustomerOrderPage() {
     reader.readAsDataURL(file);
   };
 
-  const confirmCrop = async (blob: Blob) => {
+  const confirmCrop = async (blob: Blob, cropPx: number | null) => {
     if (!pending) return;
     const url = URL.createObjectURL(blob);
     const source = await getSourceImg(pending.src).catch(() => null);
     setPhotos((p) => [...p, blob]);
     setSources((s) => [...s, source]);
+    setCropPxs((c) => [...c, cropPx]);
     setThumbs((t) => [...t, url]);
     setPending(null);
     setStage("photos");
@@ -123,6 +127,7 @@ export default function CustomerOrderPage() {
   const removePhoto = (idx: number) => {
     setPhotos((p) => p.filter((_, i) => i !== idx));
     setSources((s) => s.filter((_, i) => i !== idx));
+    setCropPxs((c) => c.filter((_, i) => i !== idx));
     setThumbs((t) => {
       URL.revokeObjectURL(t[idx]);
       return t.filter((_, i) => i !== idx);
@@ -162,6 +167,7 @@ export default function CustomerOrderPage() {
       if (opts.paymentIntentId) form.append("paymentIntentId", opts.paymentIntentId);
       photos.forEach((b, i) => form.append("photos", b, `photo-${i}.jpg`));
       sources.forEach((b, i) => { if (b) form.append(`source-${i}`, b, `photo-${i}-source.jpg`); });
+      cropPxs.forEach((px, i) => { if (px !== null) form.append(`cropPx-${i}`, String(px)); });
       const res = await fetch("/api/orders", { method: "POST", body: form });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Submission failed");

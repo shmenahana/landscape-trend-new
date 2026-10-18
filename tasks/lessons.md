@@ -39,3 +39,10 @@
   `.next/cache/webpack/*.pack` even after a clean rebuild. Grep all of `.next`
   (not just static/) and `rm -rf .next/cache` afterwards. Deploys are safe:
   deploy.py excludes `.next` and the server builds with its own `.env`.
+
+## Quality floors: warn, don't clamp the control
+- A resolution floor enforced as a zoom cap (shortEdge/720) choked ordinary
+  phone photos to ~1.1x and killed pan slack — composition broke. User's rule:
+  keep user controls at full range; surface quality as a soft, non-blocking
+  note to the customer + a badge for the operator. Before capping a control,
+  compute the cap for a COMMON input (e.g. 1080px phone photo) and flag it.

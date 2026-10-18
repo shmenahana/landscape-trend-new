@@ -2,17 +2,20 @@ export type CropArea = { x: number; y: number; width: number; height: number };
 
 /**
  * Crop and resize an image region. Supports both square (1:1) and rectangular (2:3) outputs.
- * `maxW`/`maxH` control the maximum output dimensions independently.
+ * `maxW`/`maxH` control the maximum output dimensions independently. With
+ * `minW`, a crop narrower than that is upscaled to it (a tight zoom still
+ * fills the print cell; it just prints a little soft).
  */
 export async function getCroppedImg(
   imageSrc: string,
   pixelCrop: CropArea,
-  size: { maxW: number; maxH: number } = { maxW: 1200, maxH: 1200 },
+  size: { maxW: number; maxH: number; minW?: number } = { maxW: 1200, maxH: 1200 },
   quality = 0.85
 ): Promise<Blob> {
   const image = await loadImage(imageSrc);
 
-  const scale = Math.min(size.maxW / pixelCrop.width, size.maxH / pixelCrop.height, 1);
+  let scale = Math.min(size.maxW / pixelCrop.width, size.maxH / pixelCrop.height, 1);
+  if (size.minW && pixelCrop.width * scale < size.minW) scale = size.minW / pixelCrop.width;
   const outW = Math.round(pixelCrop.width * scale);
   const outH = Math.round(pixelCrop.height * scale);
 
@@ -88,13 +91,15 @@ function maxCropWidth(w: number, h: number, aspect: number): number {
 }
 
 /**
- * Highest zoom whose crop's short side is still ≥ 720px (the side is
- * maxCropWidth/zoom). Floored to the slider's 0.01 step so rounding can't dip
- * under 720.
+ * FILL zooms to 3x whatever the source resolution — composition beats a modest
+ * upscale. A crop that ends up under 720px is upscaled on export and flagged
+ * (soft-print note for the customer, "low res" badge for the operator).
  */
-export function fillMaxZoom(w: number, h: number, aspect = 1, cap = 3): number {
-  const z = Math.floor((maxCropWidth(w, h, aspect) / PRINT_CELL_PX) * 100) / 100;
-  return Math.max(1, Math.min(cap, z));
+export const FILL_MAX_ZOOM = 3;
+
+/** Would a crop this many source px across print soft (upscaled to 720)? */
+export function isSoftCrop(cropShortSidePx: number): boolean {
+  return cropShortSidePx < PRINT_CELL_PX;
 }
 
 /** Can a crop of `aspect` with a short side ≥ 720px be cut from this image? */

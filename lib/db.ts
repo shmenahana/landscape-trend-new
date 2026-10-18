@@ -151,6 +151,13 @@ if (!global.__mp_db) {
   if (!has("originalPhotos")) {
     db.exec(`ALTER TABLE orders ADD COLUMN originalPhotos TEXT`);
   }
+  // Short side of each photo's crop in SOURCE px (index-aligned with
+  // `photos`; null entry = FIT or unknown). Under 720 means the crop was
+  // upscaled to print — the dashboard flags it "low res". JSON; null on
+  // orders placed before this existed.
+  if (!has("cropPx")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN cropPx TEXT`);
+  }
   // Seed default categories on first init
   const catCount = (db.prepare("SELECT COUNT(*) as n FROM categories").get() as { n: number }).n;
   if (catCount === 0) {
@@ -221,11 +228,13 @@ export type OrderRow = {
   tipPaymentIntentId: string | null;
   galleryId: string | null;
   originalPhotos: string | null;
+  cropPx: string | null;
 };
 
-export type Order = Omit<OrderRow, "photos" | "smsConsent" | "originalPhotos"> & {
+export type Order = Omit<OrderRow, "photos" | "smsConsent" | "originalPhotos" | "cropPx"> & {
   photos: string[];
   originalPhotos: string[];
+  cropPx: (number | null)[];
   smsConsent: boolean;
 };
 
@@ -234,6 +243,7 @@ export function rowToOrder(r: OrderRow): Order {
     ...r,
     photos: JSON.parse(r.photos || "[]"),
     originalPhotos: JSON.parse(r.originalPhotos || "[]"),
+    cropPx: JSON.parse(r.cropPx || "[]"),
     smsConsent: Boolean(r.smsConsent),
   };
 }

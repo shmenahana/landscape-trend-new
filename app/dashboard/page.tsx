@@ -42,6 +42,8 @@ type Order = {
   // Uncropped copy per photo (index-aligned with `photos`); null when the
   // order predates source uploads. Derived server-side from what's on disk.
   sourcePhotos?: (string | null)[];
+  // FILL crop short side in source px per photo; null = FIT / unknown.
+  cropPx?: (number | null)[];
 };
 
 // Small "Original" link under a photo — opens the uncropped source in a new
@@ -54,6 +56,19 @@ function OriginalLink({ order, index }: { order: Order; index: number }) {
       className="block text-[10px] text-center text-warmgray hover:text-gold underline-offset-2 hover:underline mt-0.5">
       Original
     </a>
+  );
+}
+
+// "low res" flag under a photo whose crop was under 720 source px — it was
+// upscaled to print and may come out soft. Catch it before pressing.
+function LowResBadge({ order, index }: { order: Order; index: number }) {
+  const px = order.cropPx?.[index];
+  if (px == null || px >= 720) return null;
+  return (
+    <span title={`Crop was ${px}px; upscaled to 720 for print`}
+      className="block w-fit mx-auto mt-0.5 rounded bg-gold/20 px-1 text-[10px] font-semibold uppercase tracking-wide text-navy">
+      low res
+    </span>
   );
 }
 
@@ -1094,6 +1109,7 @@ function OrderCard({
               className={`${photoAspect} w-full object-cover rounded border border-bordercream`}
             />
             <OriginalLink order={order} index={i} />
+            <LowResBadge order={order} index={i} />
           </div>
         ))}
       </div>
@@ -1166,6 +1182,7 @@ function ArchivedOrderCard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
               <OriginalLink order={order} index={i} />
+              <LowResBadge order={order} index={i} />
             </div>
           ))}
         </div>
@@ -1284,6 +1301,7 @@ function ShippedOrderCard({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p} alt="" className="aspect-square w-full object-cover rounded border border-bordercream" />
             <OriginalLink order={order} index={i} />
+            <LowResBadge order={order} index={i} />
           </div>
         ))}
       </div>
@@ -1401,6 +1419,7 @@ function WeddingOrderCard({
         </div>
       )}
       {photo && <OriginalLink order={order} index={0} />}
+      {photo && <LowResBadge order={order} index={0} />}
 
       <div className="flex flex-wrap gap-2 mt-3 items-center">
         {!onSheet && order.status !== "ready" && order.status !== "picked_up" && (

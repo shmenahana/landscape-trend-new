@@ -165,6 +165,9 @@ export async function POST(req: NextRequest) {
   await fs.mkdir(uploadDir, { recursive: true });
 
   const photoPaths: string[] = [];
+  // Informational only (the dashboard's "low res" badge), so anything missing
+  // or malformed is just null — never a reason to reject the order.
+  const cropPx: (number | null)[] = [];
   for (let i = 0; i < photoFiles.length; i++) {
     const file = photoFiles[i];
     const ext = file.type === "image/png" ? "png" : "jpg";
@@ -172,6 +175,8 @@ export async function POST(req: NextRequest) {
     const buf = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(uploadDir, name), buf);
     photoPaths.push(`/uploads/${id}/${name}`);
+    const px = Number(form.get(`cropPx-${i}`));
+    cropPx.push(Number.isInteger(px) && px > 0 && px < 100000 ? px : null);
 
     // Optional uncropped copy (client-downscaled JPEG) for redoing a bad crop.
     // Keyed by index so a missing one can't shift the rest; anything absent or
@@ -226,13 +231,13 @@ export async function POST(req: NextRequest) {
        (id, firstName, phone, package, status, photos, magnetSize,
         paymentMethod, paymentStatus, stripePaymentIntentId, orderCode,
         smsConsent, orderType, lastName, email, shippingAddress, shippingRate,
-        originalPhotos)
-     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        originalPhotos, cropPx)
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id, firstName, phone, pkg, JSON.stringify(photoPaths), magnetSize,
     paymentMethod, paymentStatus, paymentIntentId, orderCode,
     smsConsent, orderType, lastName || null, email || null, shippingAddressJson, shippingRate,
-    originalPhotosJson
+    originalPhotosJson, JSON.stringify(cropPx)
   );
 
   const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as OrderRow;
