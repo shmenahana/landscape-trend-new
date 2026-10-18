@@ -219,7 +219,7 @@ Agents: log every change here with timestamp, role, file, and what was done.
   uses the shared fn.
 - app/gallery/[id]/page.tsx: intent body carries name/email/address.
 
-## 2026-10-18 — Zoom back to 3x; 720px floor is now a soft warning
+## 2026-10-18 — Zoom back to 3x; 720px floor is now a soft warning (deployed, 322277e)
 - lib/cropImage.ts: fillMaxZoom removed → FILL_MAX_ZOOM = 3 for every source;
   isSoftCrop(); getCroppedImg takes optional minW (upscale narrow crops).
 - app/CropStep.tsx: slider/Cropper max 3x (square + 2x3). Crop < 720 source

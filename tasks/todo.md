@@ -51,4 +51,6 @@ pan slack. Composition beats a modest upscale.
   Now it uploads 720 as asked. Same print pixels either way.
 
 ## Deploy
-- [ ] deploy.py; .env preserved, DASHBOARD_PASSWORD not rotated
+- [x] deploy.py → DEPLOY SUCCESS; .env preserved, DASHBOARD_PASSWORD not
+      rotated; pm2 online; https 200. Live /order + /shop bundles carry the
+      soft-print note and cropPx upload field.
