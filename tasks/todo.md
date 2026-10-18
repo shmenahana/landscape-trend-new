@@ -82,6 +82,15 @@ shipping. Charged amount must be exactly right. Server is the only authority.
   browser); data feeding it verified via the API.
 - Local DB restored from backup, 8 test upload dirs removed, clean rebuild.
 
+## Follow-up (user, 2026-10-18): invalid-code message, review field only
+- [x] Typed bad code + Apply → "That code isn’t valid." (aria-invalid); clears
+      on edit; full price kept; a previously applied valid code stays applied
+- [x] ?code= bad → silent: no message, field left empty (only a VALID URL
+      code pre-fills the field)
+- [x] Browser: ?code=BOGUSCODE → $18.99, no msg, empty field; typed BOGUS →
+      msg; typed "newday10 " → msg gone, $17.79; ?code=newday10 → field
+      NEWDAY10, $17.79
+
 ## Deploy
 - [ ] deploy.py; .env preserved, DASHBOARD_PASSWORD not rotated
 - [ ] live: /api/promo?code=NEWDAY10 → 10%

@@ -252,3 +252,5 @@ Agents: log every change here with timestamp, role, file, and what was done.
   shipping/total breakdown; intent request sends the code only.
 - dashboard: promo panel (used/left/expiry/$ off) atop the Online tab; code +
   discount badge on online order cards.
+- /shop follow-up: typed invalid code → "That code isn’t valid." under the
+  field; ?code= still silent and only pre-fills the field when valid.

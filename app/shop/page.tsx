@@ -77,21 +77,27 @@ export default function ShopPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Promo: from ?code= on load (the postcard QR), or typed at review.
-  // Unknown codes are ignored silently — full price, no error.
+  // A bad ?code= is ignored silently (full price); a bad code typed into the
+  // review field gets a short "isn't valid" note. Neither ever blocks checkout.
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoChecking, setPromoChecking] = useState(false);
+  const [promoInvalid, setPromoInvalid] = useState(false);
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("code");
     if (!code) return;
-    setPromoInput(code.trim());
-    checkPromo(code).then((p) => { if (p) setPromo(p); });
+    checkPromo(code).then((p) => {
+      if (!p) return;
+      setPromo(p);
+      setPromoInput(p.code);
+    });
   }, []);
   async function applyPromoInput() {
     setPromoChecking(true);
     const p = await checkPromo(promoInput);
     setPromoChecking(false);
     if (p) setPromo(p);
+    setPromoInvalid(!p);
   }
 
   const maxPhotos = pkg === "3" ? 3 : 9;
@@ -328,7 +334,9 @@ export default function ShopPage() {
                   <input
                     className="input uppercase"
                     value={promoInput}
-                    onChange={(e) => setPromoInput(e.target.value)}
+                    onChange={(e) => { setPromoInput(e.target.value); setPromoInvalid(false); }}
+                    aria-invalid={promoInvalid}
+                    aria-describedby={promoInvalid ? "promo-invalid" : undefined}
                     autoCapitalize="characters"
                     autoComplete="off"
                     spellCheck={false}
@@ -339,6 +347,11 @@ export default function ShopPage() {
                   {promoChecking ? "…" : "Apply"}
                 </button>
               </form>
+              {promoInvalid && (
+                <p id="promo-invalid" role="status" className="text-xs text-red-700 -mt-3">
+                  That code isn’t valid.
+                </p>
+              )}
 
               {error && <p className="text-sm text-red-700">{error}</p>}
 
