@@ -234,7 +234,7 @@ Agents: log every change here with timestamp, role, file, and what was done.
   auto-select bands, -source copies.
 
 
-## 2026-10-18 — Promo codes on /shop (NEWDAY10)
+## 2026-10-18 — Promo codes on /shop (NEWDAY10) (deployed, 4afead6)
 - lib/pricing.ts: shippedQuote(pkg, percentOff) — the one price of a shipped
   order (discount off the package only, whole cents, total ≥ 50¢).
 - lib/promo.ts (new, server): normalize (trim/uppercase), lookupPromo (active,

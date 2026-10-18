@@ -92,5 +92,10 @@ shipping. Charged amount must be exactly right. Server is the only authority.
       NEWDAY10, $17.79
 
 ## Deploy
-- [ ] deploy.py; .env preserved, DASHBOARD_PASSWORD not rotated
-- [ ] live: /api/promo?code=NEWDAY10 → 10%
+- [x] deploy.py → DEPLOY SUCCESS (4afead6); .env preserved, DASHBOARD_PASSWORD
+      not rotated; pm2 online; https 200
+- [x] live: /api/promo NEWDAY10 / "newday10 " / " NewDay10" → 10%; BOGUS and
+      empty → null (so promo_codes table + seed exist in prod); live /shop
+      bundle has the invalid-code message; /api/orders 401 without login
+- [ ] NOT done: a real card purchase on prod (would charge a real card) —
+      recommended before Tuesday, then refund
