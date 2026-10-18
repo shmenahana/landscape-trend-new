@@ -158,6 +158,39 @@ if (!global.__mp_db) {
   if (!has("cropPx")) {
     db.exec(`ALTER TABLE orders ADD COLUMN cropPx TEXT`);
   }
+  // Promo code applied to a shipped order (canonical uppercase) and the
+  // dollars it took off the package subtotal. Both come from the Stripe
+  // PaymentIntent's server-written metadata, never from the client.
+  if (!has("promoCode")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN promoCode TEXT`);
+  }
+  if (!has("discountAmount")) {
+    db.exec(`ALTER TABLE orders ADD COLUMN discountAmount REAL`);
+  }
+
+  // Promo codes for /shop. Looked up by lib/promo.ts only (server side).
+  // A code applies while active = 1, now < expiresAt (ISO instant; NULL = no
+  // expiry) and redemptionCount < maxRedemptions (NULL = unlimited).
+  // redemptionCount is bumped in the same transaction that saves a PAID
+  // order — never when an intent is created.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      code TEXT PRIMARY KEY,
+      percentOff INTEGER NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      expiresAt TEXT,
+      maxRedemptions INTEGER,
+      redemptionCount INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  // New Day Cleveland (Fox 8) postcard QR: 10% off, 250 uses,
+  // through 2027-01-16 Eastern (90 days from 2026-10-18; 05:00Z = midnight
+  // EST). OR IGNORE: never resets the count or a later manual edit.
+  db.prepare(
+    `INSERT OR IGNORE INTO promo_codes (code, percentOff, active, expiresAt, maxRedemptions)
+     VALUES ('NEWDAY10', 10, 1, '2027-01-17T05:00:00.000Z', 250)`
+  ).run();
   // Seed default categories on first init
   const catCount = (db.prepare("SELECT COUNT(*) as n FROM categories").get() as { n: number }).n;
   if (catCount === 0) {
@@ -229,6 +262,8 @@ export type OrderRow = {
   galleryId: string | null;
   originalPhotos: string | null;
   cropPx: string | null;
+  promoCode: string | null;
+  discountAmount: number | null;
 };
 
 export type Order = Omit<OrderRow, "photos" | "smsConsent" | "originalPhotos" | "cropPx"> & {

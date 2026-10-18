@@ -3,7 +3,8 @@ import { db, rowToOrder, type OrderRow } from "@/lib/db";
 import { validateShippedCustomer } from "@/lib/shipping";
 import { toE164 } from "@/lib/phone";
 import { isOperator } from "@/lib/auth";
-import { generateOrderCode, isPackageKey, priceCents, shippedTotalCents, SHIPPING_CENTS, type PackageKey } from "@/lib/pricing";
+import { generateOrderCode, isPackageKey, priceCents, shippedQuote, SHIPPING_CENTS, type PackageKey } from "@/lib/pricing";
+import { normalizePromoCode, promoStats, recordRedemption } from "@/lib/promo";
 import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";
@@ -24,6 +25,8 @@ export async function GET(req: NextRequest) {
       const o = rowToOrder(r);
       return { ...o, sourcePhotos: o.photos.map(sourcePathFor) };
     }),
+    // Operator-only: every promo code's limits + how it's performing.
+    promoCodes: promoStats(),
   });
 }
 
@@ -111,6 +114,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Payment intent required for card payment" }, { status: 400 });
   }
 
+  // Promo applied to this order — taken from the PaymentIntent's metadata,
+  // which only create-payment-intent writes. Never from the form.
+  let promoCode: string | null = null;
+  let discountAmount: number | null = null;
+
   // For Stripe orders: verify the PaymentIntent with Stripe before accepting.
   // This blocks spoofed paymentIntentId values from creating a print-queue order.
   if (paymentMethod === "stripe") {
@@ -128,10 +136,28 @@ export async function POST(req: NextRequest) {
           { status: 402 }
         );
       }
-      // Shipped orders must cover package price + flat shipping. Only market/
-      // shipped orders reach this Stripe branch, so pkg is a valid PackageKey.
+      // Shipped orders must cover package price − promo + flat shipping. Only
+      // market/shipped orders reach this Stripe branch, so pkg is a valid
+      // PackageKey. The promo % is the one the intent was priced with (its
+      // metadata), so a code that expired or filled up mid-checkout still
+      // matches what the customer was actually charged.
       const pkgKey = pkg as PackageKey;
-      const expected = isShipped ? shippedTotalCents(pkgKey) : priceCents(pkgKey);
+      const md = intent.metadata || {};
+      if (md.package && md.package !== pkgKey) {
+        return NextResponse.json({ error: "Payment amount mismatch" }, { status: 402 });
+      }
+      let expected = priceCents(pkgKey);
+      if (isShipped) {
+        const mdCode = normalizePromoCode(md.promoCode);
+        const mdPct = Number(md.promoPercent);
+        const pct = mdCode && Number.isInteger(mdPct) && mdPct > 0 && mdPct <= 100 ? mdPct : 0;
+        const quote = shippedQuote(pkgKey, pct);
+        expected = quote.totalCents;
+        if (pct > 0 && quote.discountCents > 0) {
+          promoCode = mdCode;
+          discountAmount = quote.discountCents / 100;
+        }
+      }
       if (intent.amount !== expected || intent.currency !== "usd") {
         return NextResponse.json(
           { error: "Payment amount mismatch" },
@@ -226,19 +252,33 @@ export async function POST(req: NextRequest) {
     .get() as { n: number };
   const ordersAhead = aheadRow.n;
 
-  db.prepare(
-    `INSERT INTO orders
-       (id, firstName, phone, package, status, photos, magnetSize,
-        paymentMethod, paymentStatus, stripePaymentIntentId, orderCode,
-        smsConsent, orderType, lastName, email, shippingAddress, shippingRate,
-        originalPhotos, cropPx)
-     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    id, firstName, phone, pkg, JSON.stringify(photoPaths), magnetSize,
-    paymentMethod, paymentStatus, paymentIntentId, orderCode,
-    smsConsent, orderType, lastName || null, email || null, shippingAddressJson, shippingRate,
-    originalPhotosJson, JSON.stringify(cropPx)
-  );
+  // One transaction: re-check the intent is unused (two concurrent POSTs of
+  // the same intent both passed the check above), save the order, and count
+  // the promo redemption — only ever for a saved, paid order.
+  const saved = db.transaction(() => {
+    if (paymentIntentId && db.prepare("SELECT 1 FROM orders WHERE stripePaymentIntentId = ?").get(paymentIntentId)) {
+      return false;
+    }
+    db.prepare(
+      `INSERT INTO orders
+         (id, firstName, phone, package, status, photos, magnetSize,
+          paymentMethod, paymentStatus, stripePaymentIntentId, orderCode,
+          smsConsent, orderType, lastName, email, shippingAddress, shippingRate,
+          originalPhotos, cropPx, promoCode, discountAmount)
+       VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      id, firstName, phone, pkg, JSON.stringify(photoPaths), magnetSize,
+      paymentMethod, paymentStatus, paymentIntentId, orderCode,
+      smsConsent, orderType, lastName || null, email || null, shippingAddressJson, shippingRate,
+      originalPhotosJson, JSON.stringify(cropPx), promoCode, discountAmount
+    );
+    if (promoCode) recordRedemption(promoCode);
+    return true;
+  })();
+  if (!saved) {
+    await fs.rm(uploadDir, { recursive: true, force: true });
+    return NextResponse.json({ error: "Payment already used for an order" }, { status: 409 });
+  }
 
   const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(id) as OrderRow;
   return NextResponse.json({ order: rowToOrder(row), ordersAhead }, { status: 201 });

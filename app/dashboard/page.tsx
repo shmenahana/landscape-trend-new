@@ -44,7 +44,50 @@ type Order = {
   sourcePhotos?: (string | null)[];
   // FILL crop short side in source px per photo; null = FIT / unknown.
   cropPx?: (number | null)[];
+  // Promo applied at /shop checkout (from the Stripe intent) + dollars off.
+  promoCode?: string | null;
+  discountAmount?: number | null;
 };
+
+// Promo code limits + performance, from GET /api/orders (operator only).
+type PromoStat = {
+  code: string;
+  percentOff: number;
+  status: "live" | "inactive" | "expired" | "used up";
+  expiresAt: string | null;
+  maxRedemptions: number | null;
+  redemptionCount: number;
+  remaining: number | null;
+  orders: number;
+  discountTotal: number;
+};
+
+function PromoPanel({ promos }: { promos: PromoStat[] }) {
+  if (promos.length === 0) return null;
+  return (
+    <section className="parlor-card p-3 mb-3 bg-warmwhite">
+      <h2 className="font-serif text-base text-navy">Promo codes</h2>
+      <ul className="mt-1 space-y-1.5">
+        {promos.map((p) => (
+          <li key={p.code} className="text-xs text-charcoal leading-snug">
+            <span className="font-semibold text-navy">{p.code}</span> · {p.percentOff}% off ·{" "}
+            <span className={p.status === "live" ? "text-[#6B8E5A]" : "text-red-700"}>{p.status}</span>
+            <br />
+            {p.redemptionCount} used
+            {p.maxRedemptions != null && <> of {p.maxRedemptions} · <b>{p.remaining} left</b></>}
+            {" "}· ${p.discountTotal.toFixed(2)} off across {p.orders} order{p.orders === 1 ? "" : "s"}
+            <br />
+            <span className="text-warmgray">
+              {p.expiresAt
+                ? `Expires ${new Date(p.expiresAt).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} ET`
+                : "No expiry"}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 // Small "Original" link under a photo — opens the uncropped source in a new
 // tab. Renders nothing when there's no source (e.g. pre-change orders).
@@ -159,6 +202,7 @@ function playPing() {
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [promos, setPromos] = useState<PromoStat[]>([]);
   const [slots, setSlots] = useState<Slot[]>(emptySlots);
   const [designsCache, setDesignsCache] = useState<Record<string, LibraryDesign>>({});
   const [loading, setLoading] = useState(true);
@@ -190,6 +234,7 @@ export default function Dashboard() {
       const j = await res.json();
       const next: Order[] = j.orders || [];
       setOrders(next);
+      setPromos(j.promoCodes || []);
 
       const incoming = new Set(next.map((o) => o.id));
       const known = knownIdsRef.current;
@@ -697,6 +742,7 @@ export default function Dashboard() {
 
           {queueTab === "online" && (
             <>
+              <PromoPanel promos={promos} />
               {shippedOrders.length === 0 ? (
                 <p className="text-sm text-warmgray italic">No online orders yet.</p>
               ) : awaitingShipment.length === 0 ? (
@@ -1294,6 +1340,14 @@ function ShippedOrderCard({
         <span className="text-gold font-serif">{priceLabel}</span> + ${shipDollars} shipping ·{" "}
         {timeAgo(order.createdAt)}
       </p>
+      {order.promoCode && (
+        <p className="text-xs mt-1">
+          <span className="rounded bg-navy px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warmwhite">
+            {order.promoCode}
+          </span>{" "}
+          <span className="text-navy">−${(order.discountAmount ?? 0).toFixed(2)} off the package</span>
+        </p>
+      )}
 
       <div className="grid grid-cols-3 gap-1 mt-2">
         {order.photos.slice(0, 9).map((p, i) => (

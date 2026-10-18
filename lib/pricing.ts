@@ -38,9 +38,39 @@ export function priceCents(pkg: PackageKey): number {
   return PRICES[pkg];
 }
 
-// Total for a shipped online order: package price + flat shipping.
+// Stripe won't create a USD charge under 50¢.
+export const STRIPE_MIN_CHARGE_CENTS = 50;
+
+export type ShippedQuote = {
+  subtotalCents: number; // package price
+  discountCents: number; // promo, off the package only — never the shipping
+  shippingCents: number;
+  totalCents: number; // what Stripe charges
+};
+
+// THE price of a shipped online order. create-payment-intent charges
+// totalCents and the orders POST checks the intent against it, so the two can
+// never disagree. percentOff comes from the server (lib/promo.ts or the
+// intent's own metadata) — never from the client. The /shop page calls this
+// too, for display only.
+export function shippedQuote(pkg: PackageKey, percentOff = 0): ShippedQuote {
+  const subtotalCents = priceCents(pkg);
+  const pct = Number.isFinite(percentOff) ? Math.min(100, Math.max(0, percentOff)) : 0;
+  const discountCents = Math.min(
+    Math.round((subtotalCents * pct) / 100),
+    Math.max(0, subtotalCents + SHIPPING_CENTS - STRIPE_MIN_CHARGE_CENTS)
+  );
+  return {
+    subtotalCents,
+    discountCents,
+    shippingCents: SHIPPING_CENTS,
+    totalCents: subtotalCents - discountCents + SHIPPING_CENTS,
+  };
+}
+
+// Total for a shipped online order with no promo: package price + shipping.
 export function shippedTotalCents(pkg: PackageKey): number {
-  return priceCents(pkg) + SHIPPING_CENTS;
+  return shippedQuote(pkg).totalCents;
 }
 
 export function priceDollars(pkg: PackageKey): string {

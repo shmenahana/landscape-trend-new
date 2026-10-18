@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { getSourceImg } from "@/lib/cropImage";
 import { CropStep, isTooSmallToPrint, type PickedImage } from "../CropStep";
-import { SHIPPING_CENTS, priceDollars, type PackageKey } from "@/lib/pricing";
+import { SHIPPING_CENTS, priceDollars, shippedQuote, type PackageKey, type ShippedQuote } from "@/lib/pricing";
 
 type Stage = "landing" | "details" | "package" | "photos" | "cropping" | "review" | "payment" | "confirm";
 
@@ -30,6 +30,21 @@ function getStripe(): Promise<Stripe | null> {
 
 function money(n: number): string {
   return n.toFixed(2);
+}
+
+// A code the server says applies right now. Display only — the server
+// re-derives the discount when it creates the PaymentIntent.
+type AppliedPromo = { code: string; percentOff: number };
+
+async function checkPromo(raw: string): Promise<AppliedPromo | null> {
+  if (!raw.trim()) return null;
+  try {
+    const res = await fetch(`/api/promo?code=${encodeURIComponent(raw.trim())}`, { cache: "no-store" });
+    const j = await res.json();
+    return typeof j?.code === "string" && typeof j?.percentOff === "number" ? { code: j.code, percentOff: j.percentOff } : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function ShopPage() {
@@ -61,9 +76,27 @@ export default function ShopPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Promo: from ?code= on load (the postcard QR), or typed at review.
+  // Unknown codes are ignored silently — full price, no error.
+  const [promo, setPromo] = useState<AppliedPromo | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoChecking, setPromoChecking] = useState(false);
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (!code) return;
+    setPromoInput(code.trim());
+    checkPromo(code).then((p) => { if (p) setPromo(p); });
+  }, []);
+  async function applyPromoInput() {
+    setPromoChecking(true);
+    const p = await checkPromo(promoInput);
+    setPromoChecking(false);
+    if (p) setPromo(p);
+  }
+
   const maxPhotos = pkg === "3" ? 3 : 9;
-  const packageDollars = Number(priceDollars(pkg));
-  const totalDollars = packageDollars + SHIPPING;
+  const quote = shippedQuote(pkg, promo?.percentOff ?? 0);
+  const totalDollars = quote.totalCents / 100;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cropping state (always square)
@@ -206,20 +239,7 @@ export default function ShopPage() {
                 <PackageOption active={pkg === "3"} onClick={() => setPkg("3")} count={3} price={priceDollars("3")} />
                 <PackageOption active={pkg === "9"} onClick={() => setPkg("9")} count={9} price={priceDollars("9")} />
               </div>
-              <div className="border-t border-bordercream pt-4 space-y-2 text-sm">
-                <div className="flex justify-between text-charcoal">
-                  <span>{pkg === "9" ? "9 Magnets" : "3 Magnets"}</span>
-                  <span>${money(packageDollars)}</span>
-                </div>
-                <div className="flex justify-between text-charcoal">
-                  <span>Flat-rate shipping</span>
-                  <span>${money(SHIPPING)}</span>
-                </div>
-                <div className="flex justify-between items-baseline pt-2 border-t border-bordercream">
-                  <span className="label mb-0">Total</span>
-                  <span className="font-serif text-gold text-2xl leading-none">${money(totalDollars)}</span>
-                </div>
-              </div>
+              <Totals pkg={pkg} quote={quote} promo={promo} shippingLabel="Flat-rate shipping" />
               {error && <p className="text-sm text-red-700">{error}</p>}
               <button className="btn-primary w-full" onClick={goToPhotos}>Continue →</button>
             </div>
@@ -297,14 +317,28 @@ export default function ShopPage() {
                 <p className="text-charcoal">{pkg === "9" ? "9 Magnets" : "3 Magnets"}</p>
               </div>
 
-              <div className="border-t border-bordercream pt-4 space-y-2 text-sm">
-                <div className="flex justify-between text-charcoal"><span>{pkg === "9" ? "9 Magnets" : "3 Magnets"}</span><span>${money(packageDollars)}</span></div>
-                <div className="flex justify-between text-charcoal"><span>Shipping</span><span>${money(SHIPPING)}</span></div>
-                <div className="flex justify-between items-baseline pt-2 border-t border-bordercream">
-                  <span className="label mb-0">Total</span>
-                  <span className="font-serif text-gold text-2xl leading-none">${money(totalDollars)}</span>
-                </div>
-              </div>
+              <Totals pkg={pkg} quote={quote} promo={promo} shippingLabel="Shipping" />
+
+              <form
+                className="flex gap-2 items-end"
+                onSubmit={(e) => { e.preventDefault(); applyPromoInput(); }}
+              >
+                <label className="flex-1">
+                  <span className="label">Promo code</span>
+                  <input
+                    className="input uppercase"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value)}
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="Optional"
+                  />
+                </label>
+                <button type="submit" className="btn-outline px-4" disabled={promoChecking || !promoInput.trim()}>
+                  {promoChecking ? "…" : "Apply"}
+                </button>
+              </form>
 
               {error && <p className="text-sm text-red-700">{error}</p>}
 
@@ -371,7 +405,11 @@ export default function ShopPage() {
               <div className="parlor-card p-5 text-center">
                 <p className="text-xs text-warmgray uppercase tracking-widest">Total (incl. shipping)</p>
                 <p className="font-serif text-gold text-4xl leading-none mt-1">${money(totalDollars)}</p>
-                <p className="text-xs text-warmgray mt-1">{pkg === "9" ? "9 Magnets" : "3 Magnets"} · ${money(SHIPPING)} shipping</p>
+                <p className="text-xs text-warmgray mt-1">
+                  {pkg === "9" ? "9 Magnets" : "3 Magnets"}
+                  {promo && quote.discountCents > 0 && <> · {promo.code} −${money(quote.discountCents / 100)}</>}
+                  {" "}· ${money(SHIPPING)} shipping
+                </p>
                 <p className="text-xs text-charcoal mt-3 leading-snug">
                   Ships to {firstName} {lastName}, {street}, {city}, {stateCode} {zip}
                 </p>
@@ -379,6 +417,8 @@ export default function ShopPage() {
 
               <ShippedPayment
                 pkg={pkg}
+                promoCode={promo?.code ?? null}
+                expectedCents={quote.totalCents}
                 customer={{
                   firstName: firstName.trim(),
                   lastName: lastName.trim(),
@@ -450,6 +490,36 @@ function Landing({ onStart }: { onStart: () => void }) {
   );
 }
 
+// Subtotal, promo line (when one applies), shipping, total — all from the
+// same shippedQuote the server charges with.
+function Totals({ pkg, quote, promo, shippingLabel }: {
+  pkg: PackageKey; quote: ShippedQuote; promo: AppliedPromo | null; shippingLabel: string;
+}) {
+  const discounted = promo !== null && quote.discountCents > 0;
+  return (
+    <div className="border-t border-bordercream pt-4 space-y-2 text-sm">
+      <div className="flex justify-between text-charcoal">
+        <span>{pkg === "9" ? "9 Magnets" : "3 Magnets"}{discounted && " (subtotal)"}</span>
+        <span>${money(quote.subtotalCents / 100)}</span>
+      </div>
+      {discounted && (
+        <div className="flex justify-between text-navy">
+          <span>{promo.code} ({promo.percentOff}% off)</span>
+          <span>−${money(quote.discountCents / 100)}</span>
+        </div>
+      )}
+      <div className="flex justify-between text-charcoal">
+        <span>{shippingLabel}</span>
+        <span>${money(quote.shippingCents / 100)}</span>
+      </div>
+      <div className="flex justify-between items-baseline pt-2 border-t border-bordercream">
+        <span className="label mb-0">Total</span>
+        <span className="font-serif text-gold text-2xl leading-none">${money(quote.totalCents / 100)}</span>
+      </div>
+    </div>
+  );
+}
+
 function Header({ subtitle }: { subtitle: string }) {
   return (
     <div className="text-center mt-2">
@@ -475,9 +545,14 @@ function PackageOption({ active, onClick, count, price }: { active: boolean; onC
 }
 
 function ShippedPayment({
-  pkg, customer, submitting, onSuccess,
+  pkg, promoCode, expectedCents, customer, submitting, onSuccess,
 }: {
   pkg: PackageKey;
+  // Just the code — the server looks it up and prices the intent itself.
+  promoCode: string | null;
+  // What the page is showing, to catch a code that stopped applying
+  // between review and payment (the server's amount always wins).
+  expectedCents: number;
   // Sent with the intent request so the server validates the address before
   // any charge can exist.
   customer: {
@@ -493,6 +568,7 @@ function ShippedPayment({
   const [intentId, setIntentId] = useState<string | null>(null);
   const [intentError, setIntentError] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
+  const [chargedCents, setChargedCents] = useState<number | null>(null);
   const stripeReady = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
   async function startCard() {
@@ -502,12 +578,13 @@ function ShippedPayment({
       const res = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ package: pkg, orderType: "shipped", ...customer }),
+        body: JSON.stringify({ package: pkg, orderType: "shipped", promoCode, ...customer }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not start card payment");
       setClientSecret(j.clientSecret);
       setIntentId(j.paymentIntentId);
+      setChargedCents(typeof j.amount === "number" ? j.amount : null);
     } catch (e: any) {
       setIntentError(e.message || "Could not start card payment");
     } finally {
@@ -553,6 +630,11 @@ function ShippedPayment({
         },
       }}
     >
+      {chargedCents !== null && chargedCents !== expectedCents && (
+        <p className="text-sm text-navy text-center mb-3">
+          Your card will be charged ${money(chargedCents / 100)}.
+        </p>
+      )}
       <CardForm intentId={intentId!} onSuccess={onSuccess} />
     </Elements>
   );

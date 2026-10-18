@@ -46,3 +46,15 @@
   keep user controls at full range; surface quality as a soft, non-blocking
   note to the customer + a badge for the operator. Before capping a control,
   compute the cap for a COMMON input (e.g. 1080px phone photo) and flag it.
+
+## Local test servers (Windows)
+- Stopping a background `npx next start` task kills npx, NOT the node server
+  under it — the old build keeps the port and the next server silently fails.
+  Start with `node node_modules/next/dist/bin/next start -p N` and stop by
+  port owner (Get-NetTCPConnection -LocalPort N). Check the port before tests.
+- NODE_OPTIONS=--require loads into npx's helper processes too; run node
+  directly when preloading.
+- Fake Stripe for amount checks: patch https.request for api.stripe.com →
+  local http server, and forward the socket 'connect' as 'secureConnect'
+  (Stripe's Node client only writes the body on secureConnect). Stripe.js
+  rejects fake client secrets in Elements — test the request, not the form.

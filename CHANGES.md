@@ -233,3 +233,22 @@ Agents: log every change here with timestamp, role, file, and what was done.
 - Unchanged: forced FIT when short edge < 720, upload rejects, tiles,
   auto-select bands, -source copies.
 
+
+## 2026-10-18 — Promo codes on /shop (NEWDAY10)
+- lib/pricing.ts: shippedQuote(pkg, percentOff) — the one price of a shipped
+  order (discount off the package only, whole cents, total ≥ 50¢).
+- lib/promo.ts (new, server): normalize (trim/uppercase), lookupPromo (active,
+  not expired, under max), recordRedemption, promoStats.
+- lib/db.ts: promo_codes table (code, percentOff, active, expiresAt,
+  maxRedemptions, redemptionCount); seed NEWDAY10 10% / 250 / through
+  2027-01-16 ET. orders + promoCode, discountAmount.
+- create-payment-intent: shipped only — prices with lookupPromo, writes promo
+  into the intent metadata. Market ignores codes.
+- /api/orders: promo read back from the intent metadata (never the form);
+  amount + package checked against shippedQuote; insert + redemption count in
+  one transaction (also closes a double-submit race). GET adds promoCodes.
+- /api/promo (new): display-only lookup → {code, percentOff} | {code:null}.
+- /shop: ?code= auto-applies; promo field at review; subtotal/discount/
+  shipping/total breakdown; intent request sends the code only.
+- dashboard: promo panel (used/left/expiry/$ off) atop the Online tab; code +
+  discount badge on online order cards.
