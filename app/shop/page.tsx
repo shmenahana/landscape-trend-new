@@ -487,6 +487,19 @@ function Landing({ onStart }: { onStart: () => void }) {
       <div className="heart-divider my-6"><span>♥</span></div>
       <p className="font-serif italic text-warmgray text-lg">Your photos on magnets, shipped to your door.</p>
 
+      <div className="mt-6 pb-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/photos/product-magnets.webp"
+          width={1000}
+          height={1000}
+          alt="Finished photo magnets on the display board"
+          className="w-full h-auto rounded-md max-w-md mx-auto"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mt-8">
         {(["3", "9"] as const).map((k) => (
           <div key={k} className="parlor-card p-5">

@@ -37,7 +37,9 @@ export default function HomeClient() {
       <div className="awning" aria-hidden />
 
       <Hero />
+      <HeroPhoto />
       <About />
+      <PhotoRow />
       <HowItWorks />
       <Events />
       <Pricing />
@@ -136,6 +138,24 @@ function Hero() {
   );
 }
 
+function HeroPhoto() {
+  return (
+    <div className="border-t border-bordercream">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/photos/hero.webp"
+        width={2200}
+        height={916}
+        alt="Photographing a couple under the floral arch at a reception, the shot visible on the phone screen"
+        className="w-full h-auto"
+        loading="eager"
+        // React 18 only passes the lowercase attribute through to the DOM.
+        {...{ fetchpriority: "high" }}
+      />
+    </div>
+  );
+}
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-xs text-gold uppercase tracking-[0.4em]">{children}</p>
@@ -162,6 +182,35 @@ function About() {
           you&apos;ll see and smile at every single day. Find us at local markets across
           Northeast Ohio, or book us for your next event.
         </p>
+      </div>
+    </section>
+  );
+}
+
+function PhotoRow() {
+  const photos = [
+    { src: "/photos/g-booth.webp", alt: "Guests looking at the magnet display board at the table" },
+    { src: "/photos/g-upload.webp", alt: "A guest holding up her phone to choose a photo" },
+    { src: "/photos/g-magnets.webp", alt: "A display board covered in finished photo magnets" },
+  ];
+  return (
+    <section className="px-5 py-16">
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {photos.map((p) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={p.src}
+              src={p.src}
+              width={820}
+              height={1093}
+              alt={p.alt}
+              className="w-full h-auto rounded-md"
+              loading="lazy"
+              decoding="async"
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

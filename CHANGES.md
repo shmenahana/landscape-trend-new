@@ -2,6 +2,21 @@
 
 Agents: log every change here with timestamp, role, file, and what was done.
 
+## 2026-10-19 — Wedding photos on homepage and /shop (LOCAL, not deployed)
+- public/photos/: 5 webp files from ~/Downloads/magnet-parlor-photos.zip
+  (hero 2200x916; g-booth, g-upload, g-magnets 820x1093; product-magnets
+  1000x1000). The zip's .jpg backups, spares/ and README.txt were not copied.
+- app/HomeClient.tsx: new HeroPhoto band (full-bleed, between Hero and About,
+  border-t only so it doesn't double About's border-y; eager + fetchpriority
+  high) and new PhotoRow (3-up grid, lazy, between About and HowItWorks).
+- app/shop/page.tsx: product-magnets photo between the tagline and the pack
+  grid, the same width as the packs (no extra px-5), mt-6 gap.
+- Untouched: checkout, app/api/, crop component, prices/packs/shipping/promo,
+  next.config, copy, #how/#events/#pricing cards.
+- Verified: production build clean (no warnings); Playwright at 390 + 1280:
+  all 5 images load, no 4xx/5xx, no horizontal scroll, #how numerals in the
+  same positions, #events cards equal height (295px) at desktop.
+
 ## 2026-09-29 — Library: 7 Louisville Leopards designs added (LOCAL + PRODUCTION)
 - Source: ~/Downloads/louisville-leopards-magnets.zip — 7 PNGs, all 720x720
   (= 2.4in @ 300 DPI, exactly one 2x2 print cell). Imported as 7 SEPARATE
