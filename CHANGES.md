@@ -2,7 +2,7 @@
 
 Agents: log every change here with timestamp, role, file, and what was done.
 
-## 2026-10-19 — Wedding photos on homepage and /shop (LOCAL, not deployed)
+## 2026-10-19 — Wedding photos on homepage and /shop (deployed, 44ae24e)
 - public/photos/: 5 webp files from ~/Downloads/magnet-parlor-photos.zip
   (hero 2200x916; g-booth, g-upload, g-magnets 820x1093; product-magnets
   1000x1000). The zip's .jpg backups, spares/ and README.txt were not copied.
@@ -16,6 +16,13 @@ Agents: log every change here with timestamp, role, file, and what was done.
 - Verified: production build clean (no warnings); Playwright at 390 + 1280:
   all 5 images load, no 4xx/5xx, no horizontal scroll, #how numerals in the
   same positions, #events cards equal height (295px) at desktop.
+- Git: pushed claude/magnet-parlor-system-JBzAG; first merge to main
+  (fast-forward 3706480 -> 153e53f). The remote branch had a stale May 28
+  commit 935dee2 (2.5in print cells, superseded by the 2.4in sheet) — merged
+  with -s ours, so no file changed.
+- PRODUCTION: deploy.py -> server_deploy.sh, .env and DB preserved, build OK,
+  pm2 reload. Live: / and /shop 200; all 5 /photos/*.webp 200 image/webp with
+  byte-identical sizes; all 5 referenced in the live HTML.
 
 ## 2026-09-29 — Library: 7 Louisville Leopards designs added (LOCAL + PRODUCTION)
 - Source: ~/Downloads/louisville-leopards-magnets.zip — 7 PNGs, all 720x720
