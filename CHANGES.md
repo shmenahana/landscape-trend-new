@@ -2,6 +2,14 @@
 
 Agents: log every change here with timestamp, role, file, and what was done.
 
+## 2026-11-18 — Flat shipping $6.99 -> $8.99 (not yet deployed)
+- lib/pricing.ts: SHIPPING_CENTS 699 -> 899. Single source: /shop totals and
+  copy, gallery totals, payment-intent amounts and stored shippingRate all
+  read it.
+- Untouched: app/dashboard/page.tsx "6.99" fallback, which only labels old
+  orders saved without a shippingRate (they were charged $6.99).
+- Verified: tsc --noEmit clean.
+
 ## 2026-10-19 — Wedding photos on homepage and /shop (deployed, 44ae24e)
 - public/photos/: 5 webp files from ~/Downloads/magnet-parlor-photos.zip
   (hero 2200x916; g-booth, g-upload, g-magnets 820x1093; product-magnets

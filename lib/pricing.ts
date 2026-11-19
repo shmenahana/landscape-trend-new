@@ -9,7 +9,7 @@ const PRICES: Record<PackageKey, number> = {
 };
 
 // Flat shipping rate for online /shop orders (shipped to the customer).
-export const SHIPPING_CENTS = 699; // $6.99
+export const SHIPPING_CENTS = 899; // $8.99
 
 // ── Wedding gallery upsell pricing ───────────────────────────────────────────
 // Within the 30-day gallery window: $8 each, or 3 for $20 (auto-applied).
