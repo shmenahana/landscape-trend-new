@@ -2,13 +2,19 @@
 
 Agents: log every change here with timestamp, role, file, and what was done.
 
-## 2026-11-18 — Flat shipping $6.99 -> $8.99 (not yet deployed)
+## 2026-11-18 — Flat shipping $6.99 -> $8.99 (deployed, b6fc30b)
 - lib/pricing.ts: SHIPPING_CENTS 699 -> 899. Single source: /shop totals and
   copy, gallery totals, payment-intent amounts and stored shippingRate all
   read it.
 - Untouched: app/dashboard/page.tsx "6.99" fallback, which only labels old
   orders saved without a shippingRate (they were charged $6.99).
 - Verified: tsc --noEmit clean.
+- Git: b6fc30b pushed to claude/magnet-parlor-system-JBzAG; main fast-forwarded.
+- PRODUCTION: deploy.py -> server_deploy.sh, .env and DB preserved, build OK,
+  pm2 reload, https 200.
+- Live: /shop landing reads "Flat $8.99 shipping"; Step 1 with 3-pack shows
+  $12.00 + $8.99 = $20.99. shippedQuote('3') -> 1200 + 899 = 2099 cents (the
+  amount the intent route charges). No live PaymentIntent was created.
 
 ## 2026-10-19 — Wedding photos on homepage and /shop (deployed, 44ae24e)
 - public/photos/: 5 webp files from ~/Downloads/magnet-parlor-photos.zip
